@@ -8,16 +8,10 @@ Este archivo proporciona guía a Claude Code (claude.ai/code) al trabajar con c�
 
 Arcade Vault — una plataforma para jugar online y competir por la mayor cantidad de puntos (ver README.md). El código es actualmente un scaffold recién creado con `create-next-app` (App Router, TypeScript, Tailwind CSS v4); todavía no se han implementado funcionalidades del juego/vault.
 
-## Comandos
-
-```bash
-npm run dev      # iniciar servidor de desarrollo (Turbopack)
-npm run build    # build de producción
-npm run start    # ejecutar el build de producción
-npm run lint     # eslint (flat config vía eslint.config.mjs)
-```
-
 Todavía no hay un test runner configurado.
+
+## Skills
+Usa siempre /frontend-design para diseñar la interfaz de usuario
 
 ## Arquitectura
 

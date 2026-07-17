@@ -16,3 +16,12 @@ npx skills@latest add Klerith/fernando-skills
 ```
 
 ## Hola Mundo, solamente es una prueba
+
+## Comandos
+
+```bash
+npm run dev      # iniciar servidor de desarrollo (Turbopack)
+npm run build    # build de producción
+npm run start    # ejecutar el build de producción
+npm run lint     # eslint (flat config vía eslint.config.mjs)
+```
