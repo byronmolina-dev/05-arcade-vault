@@ -53,21 +53,21 @@ La única pieza de datos reutilizada entre pantallas es `data/games.json` (ya ex
 
 ## Acceptance criteria
 
-- [ ] `/` carga sin errores en consola y muestra la pantalla Home (hero con siluetas flotantes, features, mini-rail de juegos, stats, actividad en vivo, pricing, CTA final).
-- [ ] `/games` carga sin errores y muestra la Biblioteca (buscador, chips de categoría, grid de juegos) exactamente igual que antes de mover la ruta.
-- [ ] `/about` carga sin errores y muestra el hero de misión, la fila de highlights, el banner divisor y el formulario de contacto.
-- [ ] En Home, el botón "▶ EXPLORAR JUEGOS" navega a `/games`.
-- [ ] En Home, los botones "✦ CREAR CUENTA" y "EMPEZAR GRATIS →" navegan a `/auth`.
-- [ ] En Home, la sección "Juegos disponibles ahora" muestra los primeros 6 juegos de `data/games.json` y cada tarjeta navega a `/juegos/[id]` del juego correspondiente.
-- [ ] En Home, el botón "VER TODOS LOS JUEGOS →" navega a `/games`.
-- [ ] En Home, el botón "VER SALÓN →" navega a `/salon`.
-- [ ] En Home, las secciones marcadas `reveal` aparecen con la animación de entrada al hacer scroll hasta ellas (se les agrega la clase `.in` al entrar en el viewport).
-- [ ] En About, enviar el formulario de contacto con algún campo vacío dispara la animación "shake" y no muestra el mensaje de éxito.
-- [ ] En About, enviar el formulario con los tres campos completos muestra el mensaje de éxito estilo terminal con el nombre ingresado, y "ENVIAR OTRO MENSAJE" vuelve a mostrar el formulario vacío.
-- [ ] El Nav muestra los links "Inicio", "Biblioteca", "Salón de la Fama" y "Acerca de", en ese orden, en escritorio y en el panel móvil.
-- [ ] El link "Inicio" está activo únicamente en `/`; el link "Biblioteca" está activo en `/games` y en cualquier ruta `/juegos/*`.
-- [ ] El logo del Nav navega a `/`.
-- [ ] En viewport móvil, el botón hamburguesa abre el panel con los 4 links de navegación más la opción de sesión.
+- [x] `/` carga sin errores en consola y muestra la pantalla Home (hero con siluetas flotantes, features, mini-rail de juegos, stats, actividad en vivo, pricing, CTA final).
+- [x] `/games` carga sin errores y muestra la Biblioteca (buscador, chips de categoría, grid de juegos) exactamente igual que antes de mover la ruta.
+- [x] `/about` carga sin errores y muestra el hero de misión, la fila de highlights, el banner divisor y el formulario de contacto.
+- [x] En Home, el botón "▶ EXPLORAR JUEGOS" navega a `/games`.
+- [x] En Home, los botones "✦ CREAR CUENTA" y "EMPEZAR GRATIS →" navegan a `/auth`.
+- [x] En Home, la sección "Juegos disponibles ahora" muestra los primeros 6 juegos de `data/games.json` y cada tarjeta navega a `/juegos/[id]` del juego correspondiente.
+- [x] En Home, el botón "VER TODOS LOS JUEGOS →" navega a `/games`.
+- [x] En Home, el botón "VER SALÓN →" navega a `/salon`.
+- [x] En Home, las secciones marcadas `reveal` aparecen con la animación de entrada al hacer scroll hasta ellas (se les agrega la clase `.in` al entrar en el viewport).
+- [x] En About, enviar el formulario de contacto con algún campo vacío dispara la animación "shake" y no muestra el mensaje de éxito.
+- [x] En About, enviar el formulario con los tres campos completos muestra el mensaje de éxito estilo terminal con el nombre ingresado, y "ENVIAR OTRO MENSAJE" vuelve a mostrar el formulario vacío.
+- [x] El Nav muestra los links "Inicio", "Biblioteca", "Salón de la Fama" y "Acerca de", en ese orden, en escritorio y en el panel móvil.
+- [x] El link "Inicio" está activo únicamente en `/`; el link "Biblioteca" está activo en `/games` y en cualquier ruta `/juegos/*`.
+- [x] El logo del Nav navega a `/`.
+- [x] En viewport móvil, el botón hamburguesa abre el panel con los 4 links de navegación más la opción de sesión.
 
 ## Decisions
 
