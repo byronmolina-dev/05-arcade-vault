@@ -1,6 +1,6 @@
 # SPEC 02 — Home y About (Arcade Vault)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 01
 > **Date:** 2026-07-18
 > **Objective:** Migrar a Next.js App Router las pantallas Home (`/`) y Acerca de (`/about`) definidas en `references/templates/home-about/`, reubicando la Biblioteca actual a `/games` y actualizando el Nav compartido para reflejar la nueva estructura de rutas.
