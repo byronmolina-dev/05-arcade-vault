@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { courierPrime, jetBrainsMono, pressStart2P } from "./fonts";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,7 +22,11 @@ export default function RootLayout({
       <body className="min-h-full">
         <div className="av-bg" />
         <div className="av-noise" />
-        <div id="root">{children}</div>
+        <div id="root">
+          <Nav />
+          <main className="av-main">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
