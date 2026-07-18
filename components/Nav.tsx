@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/games", label: "Biblioteca" },
   { href: "/salon", label: "Salón de la Fama" },
+  { href: "/about", label: "Acerca de" },
 ];
 
 function getServerUserSnapshot() {
