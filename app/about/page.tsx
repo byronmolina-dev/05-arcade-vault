@@ -56,15 +56,36 @@ export default function AboutPage() {
   const [form, setForm] = useState<ContactForm>(EMPTY_FORM);
   const [sent, setSent] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.msg.trim()) {
       setShake(true);
       setTimeout(() => setShake(false), 400);
       return;
     }
-    setSent(form.name.trim());
+
+    setError(null);
+    setSending(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data: { ok: boolean; error?: string } = await res.json();
+      if (res.ok && data.ok) {
+        setSent(form.name.trim());
+      } else {
+        setError(data.error ?? "No se pudo enviar el mensaje. Intenta de nuevo más tarde.");
+      }
+    } catch {
+      setError("No se pudo enviar el mensaje. Intenta de nuevo más tarde.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -132,7 +153,10 @@ export default function AboutPage() {
                   <label>MENSAJE</label>
                   <textarea rows={5} value={form.msg} onChange={(e) => setForm({ ...form, msg: e.target.value })} placeholder="Cuéntanos qué tienes en mente…"></textarea>
                 </div>
-                <button className="btn xl press" type="submit" style={{ width: "100%" }}>▶  ENVIAR MENSAJE</button>
+                {error && <div className="form-error">{error}</div>}
+                <button className="btn xl press" type="submit" style={{ width: "100%" }} disabled={sending}>
+                  {sending ? "ENVIANDO…" : "▶  ENVIAR MENSAJE"}
+                </button>
               </>
             ) : (
               <div className="terminal-success">
