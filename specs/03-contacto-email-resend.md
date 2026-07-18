@@ -1,6 +1,6 @@
 # SPEC 03 — Envío de correo del formulario de contacto (Resend)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 02
 > **Date:** 2026-07-18
 > **Objective:** Conectar el formulario de contacto de `/about` a un envío de correo real vía Resend, a través de un Route Handler (`app/api/contact/route.ts`), agregando estados de carga y error en la UI sin cambiar el diseño visual existente.
@@ -66,16 +66,16 @@ CONTACT_TO_EMAIL=
 
 ## Acceptance criteria
 
-- [ ] Enviar el formulario de contacto en `/about` con nombre, email y mensaje válidos hace un `POST` a `/api/contact` y, si Resend responde OK, llega un correo real a la dirección configurada en `CONTACT_TO_EMAIL` con `reply-to` igual al email ingresado.
-- [ ] El correo recibido tiene el asunto `Nuevo mensaje de contacto – {nombre}` y un cuerpo HTML con el nombre, email y mensaje enviados.
-- [ ] Mientras se espera la respuesta del `fetch`, el botón de envío muestra un estado de carga (deshabilitado + texto de progreso) y no se puede volver a enviar el formulario.
-- [ ] Enviar el formulario con algún campo vacío sigue disparando la animación "shake" en cliente, sin llegar a hacer `fetch` a `/api/contact`.
-- [ ] Un `POST` directo a `/api/contact` con `name`, `email` o `msg` vacío (o `email` con formato inválido) responde `400` con `{ ok: false, error }`.
-- [ ] Un `POST` válido a `/api/contact` responde `200` con `{ ok: true }` cuando Resend confirma el envío.
-- [ ] Si `resend.emails.send` falla (ej. `RESEND_API_KEY` inválida o vacía), `/api/contact` responde `500` con `{ ok: false, error }` sin exponer detalles internos de Resend.
-- [ ] Si el `fetch` desde `/about` falla o responde con error, se muestra un mensaje de error inline en el formulario, no se muestra el mensaje de éxito estilo terminal, y los valores ya escritos por el usuario se conservan.
-- [ ] Tras un envío exitoso, se muestra el mensaje de éxito estilo terminal existente, y "ENVIAR OTRO MENSAJE" vuelve a mostrar el formulario vacío, igual que hoy.
-- [ ] `RESEND_API_KEY` y `CONTACT_TO_EMAIL` están documentadas en `.env.example` y no están hardcodeadas en el código.
+- [x] Enviar el formulario de contacto en `/about` con nombre, email y mensaje válidos hace un `POST` a `/api/contact` y, si Resend responde OK, llega un correo real a la dirección configurada en `CONTACT_TO_EMAIL` con `reply-to` igual al email ingresado.
+- [x] El correo recibido tiene el asunto `Nuevo mensaje de contacto – {nombre}` y un cuerpo HTML con el nombre, email y mensaje enviados.
+- [x] Mientras se espera la respuesta del `fetch`, el botón de envío muestra un estado de carga (deshabilitado + texto de progreso) y no se puede volver a enviar el formulario.
+- [x] Enviar el formulario con algún campo vacío sigue disparando la animación "shake" en cliente, sin llegar a hacer `fetch` a `/api/contact`.
+- [x] Un `POST` directo a `/api/contact` con `name`, `email` o `msg` vacío (o `email` con formato inválido) responde `400` con `{ ok: false, error }`.
+- [x] Un `POST` válido a `/api/contact` responde `200` con `{ ok: true }` cuando Resend confirma el envío.
+- [x] Si `resend.emails.send` falla (ej. `RESEND_API_KEY` inválida o vacía), `/api/contact` responde `500` con `{ ok: false, error }` sin exponer detalles internos de Resend.
+- [x] Si el `fetch` desde `/about` falla o responde con error, se muestra un mensaje de error inline en el formulario, no se muestra el mensaje de éxito estilo terminal, y los valores ya escritos por el usuario se conservan.
+- [x] Tras un envío exitoso, se muestra el mensaje de éxito estilo terminal existente, y "ENVIAR OTRO MENSAJE" vuelve a mostrar el formulario vacío, igual que hoy.
+- [x] `RESEND_API_KEY` y `CONTACT_TO_EMAIL` están documentadas en `.env.example` y no están hardcodeadas en el código.
 
 ## Decisions
 
