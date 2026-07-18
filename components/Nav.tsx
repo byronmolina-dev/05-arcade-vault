@@ -6,8 +6,10 @@ import { useState, useSyncExternalStore } from "react";
 import { clearUser, getUser, subscribeToUser } from "@/lib/storage";
 
 const NAV_LINKS = [
-  { href: "/", label: "Biblioteca" },
+  { href: "/", label: "Inicio" },
+  { href: "/games", label: "Biblioteca" },
   { href: "/salon", label: "Salón de la Fama" },
+  { href: "/about", label: "Acerca de" },
 ];
 
 function getServerUserSnapshot() {
@@ -19,8 +21,11 @@ export default function Nav() {
   const user = useSyncExternalStore(subscribeToUser, getUser, getServerUserSnapshot);
   const [open, setOpen] = useState(false);
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" || pathname.startsWith("/juegos") : pathname === href;
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    if (href === "/games") return pathname === "/games" || pathname.startsWith("/juegos");
+    return pathname === href;
+  };
 
   const closeMenu = () => setOpen(false);
 

@@ -14,11 +14,11 @@ export default function AuthPage() {
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setUser({ name: (user || "PLAYER1").toUpperCase().slice(0, 10) });
-    router.push("/");
+    router.push("/games");
   };
 
   const playAsGuest = () => {
-    router.push("/");
+    router.push("/games");
   };
 
   return (
