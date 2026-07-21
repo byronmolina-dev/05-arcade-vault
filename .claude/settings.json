@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path'); if [ -n \"$f\" ] && [ -f \"$f\" ]; then ./node_modules/.bin/prettier --write --ignore-unknown \"$f\" </dev/null >/dev/null 2>&1; case \"$f\" in *.js|*.jsx|*.mjs|*.cjs|*.ts|*.tsx) ./node_modules/.bin/eslint --fix \"$f\" </dev/null >/dev/null 2>&1 ;; esac; fi; true",
+            "timeout": 30,
+            "statusMessage": "Formateando con Prettier/ESLint..."
+          }
+        ]
+      }
+    ]
+  }
+}
