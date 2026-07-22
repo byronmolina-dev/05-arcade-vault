@@ -14,6 +14,7 @@ const BLOCKS_ORIGIN_Y = 80;
 const PADDLE_W = 81;
 const PADDLE_H = 14;
 const PADDLE_Y = 560;
+const PADDLE_SPEED = 400;
 
 const BALL_SIZE = 16;
 const BASE_BALL_VX = 200;
@@ -21,6 +22,12 @@ const BASE_BALL_VY = -300;
 
 const EXPLOSION_DURATION = 150;
 const STARTING_LIVES = 3;
+
+const PAUSE_BTN_W = 60;
+const PAUSE_BTN_H = 40;
+const PAUSE_BTN_GAP = 12;
+const PAUSE_BTN_Y = 340;
+const PAUSE_BTN_ROW_X = (W - (5 * PAUSE_BTN_W + 4 * PAUSE_BTN_GAP)) / 2;
 
 type BlockColor =
   "red" | "yellow" | "cyan" | "magenta" | "hotpink" | "green" | "gray";
@@ -135,6 +142,8 @@ type Ball = {
 type SpriteFrame = { sx: number; sy: number; sw: number; sh: number };
 
 const SPRITESHEET_SRC = "/games/bloque-buster/spritesheet-breakout.png";
+const BOUNCE_SOUND_SRC = "/games/bloque-buster/sounds/ball-bounce.mp3";
+const BREAK_SOUND_SRC = "/games/bloque-buster/sounds/break-sound.mp3";
 
 const SPRITES: {
   paddle: SpriteFrame;
@@ -267,6 +276,14 @@ const BloqueBusterGame = forwardRef<
       img.src = SPRITESHEET_SRC;
     }
 
+    const bounceSound = new Audio(BOUNCE_SOUND_SRC);
+    const breakSound = new Audio(BREAK_SOUND_SRC);
+
+    function playSound(audio: HTMLAudioElement) {
+      const clone = audio.cloneNode(true) as HTMLAudioElement;
+      clone.play().catch(() => {});
+    }
+
     function drawFrame(
       frame: SpriteFrame,
       x: number,
@@ -288,7 +305,14 @@ const BloqueBusterGame = forwardRef<
       );
     }
 
-    let paddle: Paddle;
+    const keys: Record<string, boolean> = {};
+
+    let paddle: Paddle = {
+      x: (W - PADDLE_W) / 2,
+      y: PADDLE_Y,
+      w: PADDLE_W,
+      h: PADDLE_H,
+    };
     let ball: Ball;
     let blocks: Block[] = [];
     let explosions: Explosion[] = [];
@@ -372,20 +396,28 @@ const BloqueBusterGame = forwardRef<
     function update(dt: number) {
       if (frozen || paused) return;
 
+      if (keys["ArrowLeft"])
+        paddle.x = Math.max(0, paddle.x - PADDLE_SPEED * dt);
+      if (keys["ArrowRight"])
+        paddle.x = Math.min(W - paddle.w, paddle.x + PADDLE_SPEED * dt);
+
       ball.x += ball.vx * dt;
       ball.y += ball.vy * dt;
 
       if (ball.x <= 0) {
         ball.x = 0;
         ball.vx = Math.abs(ball.vx);
+        playSound(bounceSound);
       }
       if (ball.x + ball.w >= W) {
         ball.x = W - ball.w;
         ball.vx = -Math.abs(ball.vx);
+        playSound(bounceSound);
       }
       if (ball.y <= 0) {
         ball.y = 0;
         ball.vy = Math.abs(ball.vy);
+        playSound(bounceSound);
       }
 
       if (
@@ -397,6 +429,7 @@ const BloqueBusterGame = forwardRef<
       ) {
         ball.y = paddle.y - ball.h;
         ball.vy = -Math.abs(ball.vy);
+        playSound(bounceSound);
       }
 
       for (const block of blocks) {
@@ -413,6 +446,7 @@ const BloqueBusterGame = forwardRef<
           });
           score += 10;
           ball.vy = -ball.vy;
+          playSound(breakSound);
           if (blocks.every((b) => !b.alive)) {
             if (currentLevel < LEVELS.length) {
               loadLevel(currentLevel + 1);
@@ -457,6 +491,39 @@ const BloqueBusterGame = forwardRef<
       }
     }
 
+    function drawPauseOverlay() {
+      ctx!.fillStyle = "rgba(0, 0, 0, 0.65)";
+      ctx!.fillRect(0, 0, W, H);
+
+      ctx!.fillStyle = "#fff";
+      ctx!.font = "bold 56px monospace";
+      ctx!.textAlign = "center";
+      ctx!.textBaseline = "middle";
+      ctx!.fillText("PAUSA", W / 2, 260);
+
+      ctx!.font = "bold 16px monospace";
+      ctx!.fillText("Saltar al nivel:", W / 2, 310);
+
+      for (let i = 0; i < LEVELS.length; i++) {
+        const bx = PAUSE_BTN_ROW_X + i * (PAUSE_BTN_W + PAUSE_BTN_GAP);
+        const isActive = i + 1 === currentLevel;
+        ctx!.fillStyle = isActive ? "#f0c040" : "#444";
+        ctx!.strokeStyle = "#fff";
+        ctx!.lineWidth = 2;
+        ctx!.fillRect(bx, PAUSE_BTN_Y, PAUSE_BTN_W, PAUSE_BTN_H);
+        ctx!.strokeRect(bx, PAUSE_BTN_Y, PAUSE_BTN_W, PAUSE_BTN_H);
+        ctx!.fillStyle = isActive ? "#000" : "#fff";
+        ctx!.font = "bold 20px monospace";
+        ctx!.textAlign = "center";
+        ctx!.textBaseline = "middle";
+        ctx!.fillText(
+          String(i + 1),
+          bx + PAUSE_BTN_W / 2,
+          PAUSE_BTN_Y + PAUSE_BTN_H / 2,
+        );
+      }
+    }
+
     function draw() {
       ctx!.fillStyle = "#000";
       ctx!.fillRect(0, 0, W, H);
@@ -490,6 +557,8 @@ const BloqueBusterGame = forwardRef<
       drawFrame(SPRITES.ball, ball.x, ball.y, ball.w, ball.h);
 
       drawHUD();
+
+      if (paused) drawPauseOverlay();
     }
 
     let lastTime: number | null = null;
@@ -521,6 +590,54 @@ const BloqueBusterGame = forwardRef<
       },
     };
 
+    function onMouseMove(e: MouseEvent) {
+      const rect = canvas!.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const mouseX = (e.clientX - rect.left) * scaleX;
+      paddle.x = Math.max(0, Math.min(W - paddle.w, mouseX - paddle.w / 2));
+    }
+
+    function onClick(e: MouseEvent) {
+      if (!paused) return;
+      const rect = canvas!.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top) * scaleY;
+      for (let i = 0; i < LEVELS.length; i++) {
+        const bx = PAUSE_BTN_ROW_X + i * (PAUSE_BTN_W + PAUSE_BTN_GAP);
+        if (
+          mx >= bx &&
+          mx <= bx + PAUSE_BTN_W &&
+          my >= PAUSE_BTN_Y &&
+          my <= PAUSE_BTN_Y + PAUSE_BTN_H
+        ) {
+          loadLevel(i + 1);
+          paused = false;
+          return;
+        }
+      }
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.code === "ArrowLeft" || e.code === "ArrowRight") {
+        e.preventDefault();
+        keys[e.code] = true;
+      }
+    }
+
+    function onKeyUp(e: KeyboardEvent) {
+      if (e.code === "ArrowLeft" || e.code === "ArrowRight") {
+        e.preventDefault();
+        keys[e.code] = false;
+      }
+    }
+
+    canvas.addEventListener("mousemove", onMouseMove);
+    canvas.addEventListener("click", onClick);
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+
     loadSpritesheet(() => {
       initGame();
       reportState();
@@ -529,6 +646,10 @@ const BloqueBusterGame = forwardRef<
 
     return () => {
       cancelAnimationFrame(animationId);
+      canvas.removeEventListener("mousemove", onMouseMove);
+      canvas.removeEventListener("click", onClick);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
     };
   }, []);
 
