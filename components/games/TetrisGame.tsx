@@ -409,7 +409,17 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
         animationId = requestAnimationFrame(loop);
       }
 
+      const gameKeys = new Set([
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "Space",
+        "KeyX",
+      ]);
+
       const onKeyDown = (e: KeyboardEvent) => {
+        if (gameKeys.has(e.code)) e.preventDefault();
         if (paused || gameOver) return;
         switch (e.code) {
           case "ArrowLeft":
@@ -426,7 +436,6 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
             tryRotate();
             break;
           case "Space":
-            e.preventDefault();
             hardDrop();
             break;
         }
