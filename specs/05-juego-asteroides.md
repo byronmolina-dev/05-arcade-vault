@@ -73,24 +73,24 @@ La lógica interna del juego (clases `Bullet`, `Asteroid`, `Ship`, `Particle`, `
 
 ## Acceptance criteria
 
-- [ ] `data/games.json` ya no contiene ningún registro con `id: "rocas"`; existe un registro `id: "asteroides"`, `title: "ASTEROIDES"`, con `long` sin mención de OVNIs.
-- [ ] `/juegos/asteroides` carga la ficha del juego con el nuevo título, sin errores, mostrando el leaderboard sembrado igual que antes.
-- [ ] `/juegos/asteroides/jugar` renderiza el canvas real del juego (nave, asteroides, HUD interno) dentro de `.crt-screen`, en vez del placeholder `.game-arena` anterior.
-- [ ] `←`/`→` rotan la nave, `↑` propulsa (con llama visible), `Espacio` dispara — igual que el juego de referencia.
-- [ ] Al destruir asteroides grandes/medianos se dividen en fragmentos más pequeños; los pequeños desaparecen con partículas de explosión; la puntuación sube según el tamaño destruido (20/50/100).
-- [ ] El panel HUD externo (Puntuación, Vidas, Nivel) refleja en tiempo real el `score`, `lives` y `level` reales del juego — no la simulación aleatoria anterior.
-- [ ] El HUD interno del canvas (SCORE/NIVEL/vidas/indicador "3x") sigue visible y funcional en paralelo al HUD externo.
-- [ ] Perder una vida muestra el parpadeo de invencibilidad temporal al reaparecer, igual que el juego original; el contador de vidas del HUD externo baja en 1.
-- [ ] Limpiar todos los asteroides de una oleada avanza de nivel (`level` sube, aparecen más asteroides), reflejado en el HUD externo.
-- [ ] Recoger el power-up muestra el indicador "3x" con cuenta regresiva y habilita disparo triple durante su duración.
-- [ ] Presionar "PAUSA" congela el juego (nada se mueve) y muestra el overlay "EN PAUSA" existente; "REANUDAR" continúa desde el mismo estado exacto.
-- [ ] Presionar "FIN" termina la partida de inmediato con el score actual, sin esperar a perder las 3 vidas.
-- [ ] Llegar a 0 vidas (o presionar "FIN") congela el canvas y abre el modal existente de fin de partida (puntaje final, campo de iniciales, "GUARDAR PUNTUACIÓN") — el overlay interno "GAME OVER" del juego original ya **no** aparece, y Espacio ya **no** reinicia la partida por sí solo.
-- [ ] "GUARDAR PUNTUACIÓN" en el modal persiste el registro vía `pushScore({ game: "asteroides", score, name })`, igual que para cualquier otro juego.
-- [ ] "JUGAR DE NUEVO" reinicia el componente del juego a un estado limpio (score 0, 3 vidas, nivel 1); "VOLVER AL VAULT" navega a `/games`.
-- [ ] Cualquier otro juego (`bloque-buster`, `caida`, `serpentina`, `gloton`, `invasores`, `ranaria`, `duelo-pixel`) en `/juegos/[id]/jugar` sigue mostrando la simulación falsa actual sin cambios de comportamiento.
-- [ ] `npm run build` completa sin errores nuevos relacionados a los archivos agregados/modificados.
-- [ ] `npm run lint` no reporta errores nuevos en los archivos agregados/modificados.
+- [x] `data/games.json` ya no contiene ningún registro con `id: "rocas"`; existe un registro `id: "asteroides"`, `title: "ASTEROIDES"`, con `long` sin mención de OVNIs.
+- [x] `/juegos/asteroides` carga la ficha del juego con el nuevo título, sin errores, mostrando el leaderboard sembrado igual que antes.
+- [x] `/juegos/asteroides/jugar` renderiza el canvas real del juego (nave, asteroides, HUD interno) dentro de `.crt-screen`, en vez del placeholder `.game-arena` anterior.
+- [x] `←`/`→` rotan la nave, `↑` propulsa (con llama visible), `Espacio` dispara — igual que el juego de referencia.
+- [x] Al destruir asteroides grandes/medianos se dividen en fragmentos más pequeños; los pequeños desaparecen con partículas de explosión; la puntuación sube según el tamaño destruido (20/50/100).
+- [x] El panel HUD externo (Puntuación, Vidas, Nivel) refleja en tiempo real el `score`, `lives` y `level` reales del juego — no la simulación aleatoria anterior.
+- [x] El HUD interno del canvas (SCORE/NIVEL/vidas/indicador "3x") sigue visible y funcional en paralelo al HUD externo.
+- [x] Perder una vida muestra el parpadeo de invencibilidad temporal al reaparecer, igual que el juego original; el contador de vidas del HUD externo baja en 1.
+- [x] Limpiar todos los asteroides de una oleada avanza de nivel (`level` sube, aparecen más asteroides), reflejado en el HUD externo. _(verificado por revisión de código: `nextLevel()` se porta sin cambios de lógica; no se logró forzar un level-up en la sesión manual de prueba en navegador)_
+- [x] Recoger el power-up muestra el indicador "3x" con cuenta regresiva y habilita disparo triple durante su duración. _(verificado por revisión de código: spawn/colisión del power-up sin cambios de lógica; no se observó un power-up en pantalla durante la sesión manual de prueba)_
+- [x] Presionar "PAUSA" congela el juego (nada se mueve) y muestra el overlay "EN PAUSA" existente; "REANUDAR" continúa desde el mismo estado exacto.
+- [x] Presionar "FIN" termina la partida de inmediato con el score actual, sin esperar a perder las 3 vidas.
+- [x] Llegar a 0 vidas (o presionar "FIN") congela el canvas y abre el modal existente de fin de partida (puntaje final, campo de iniciales, "GUARDAR PUNTUACIÓN") — el overlay interno "GAME OVER" del juego original ya **no** aparece, y Espacio ya **no** reinicia la partida por sí solo.
+- [x] "GUARDAR PUNTUACIÓN" en el modal persiste el registro vía `pushScore({ game: "asteroides", score, name })`, igual que para cualquier otro juego.
+- [x] "JUGAR DE NUEVO" reinicia el componente del juego a un estado limpio (score 0, 3 vidas, nivel 1); "VOLVER AL VAULT" navega a `/games`.
+- [x] Cualquier otro juego (`bloque-buster`, `caida`, `serpentina`, `gloton`, `invasores`, `ranaria`, `duelo-pixel`) en `/juegos/[id]/jugar` sigue mostrando la simulación falsa actual sin cambios de comportamiento.
+- [x] `npm run build` completa sin errores nuevos relacionados a los archivos agregados/modificados.
+- [x] `npm run lint` no reporta errores nuevos en los archivos agregados/modificados.
 
 ## Decisions
 
