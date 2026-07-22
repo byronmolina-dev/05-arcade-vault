@@ -3,6 +3,7 @@ import Link from "next/link";
 import { seededScores } from "@/lib/scores";
 import { getGameById } from "@/lib/supabase/games";
 import { getTopScores } from "@/lib/supabase/scores";
+import { REAL_SCORE_GAME_IDS } from "@/lib/types";
 
 export default async function GameDetailPage(props: PageProps<"/games/[id]">) {
   const { id } = await props.params;
@@ -27,13 +28,15 @@ export default async function GameDetailPage(props: PageProps<"/games/[id]">) {
   }
   if (!game) notFound();
 
-  const isAsteroides = game.id === "asteroides";
+  const isAsteroides = (REAL_SCORE_GAME_IDS as readonly string[]).includes(
+    game.id,
+  );
   let leaderboardError = false;
   let scores = isAsteroides ? [] : seededScores(id.length * 17 + 3, 10);
 
   if (isAsteroides) {
     try {
-      scores = await getTopScores("asteroides", 10);
+      scores = await getTopScores(game.id, 10);
     } catch {
       leaderboardError = true;
     }

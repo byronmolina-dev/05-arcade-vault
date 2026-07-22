@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { seededScores } from "@/lib/scores";
 import { getUser, subscribeToUser } from "@/lib/storage";
 import { getTopScoresClient } from "@/lib/supabase/scoresClient";
-import type { Game } from "@/lib/types";
+import { REAL_SCORE_GAME_IDS, type Game } from "@/lib/types";
 
 function getServerUserSnapshot() {
   return null;
@@ -22,7 +22,7 @@ export default function SalonClient({ games }: { games: Game[] }) {
     getServerUserSnapshot,
   );
 
-  const isAsteroides = tab === "asteroides";
+  const isAsteroides = (REAL_SCORE_GAME_IDS as readonly string[]).includes(tab);
   const [asteroidsRows, setAsteroidsRows] = useState<
     ReturnType<typeof seededScores>
   >([]);
@@ -32,13 +32,14 @@ export default function SalonClient({ games }: { games: Game[] }) {
   const [prevTab, setPrevTab] = useState(tab);
   if (tab !== prevTab) {
     setPrevTab(tab);
-    if (tab === "asteroides") setAsteroidsStatus("loading");
+    if ((REAL_SCORE_GAME_IDS as readonly string[]).includes(tab))
+      setAsteroidsStatus("loading");
   }
 
   useEffect(() => {
-    if (tab !== "asteroides") return;
+    if (!(REAL_SCORE_GAME_IDS as readonly string[]).includes(tab)) return;
     let cancelled = false;
-    getTopScoresClient("asteroides", 12)
+    getTopScoresClient(tab, 12)
       .then((rows) => {
         if (cancelled) return;
         setAsteroidsRows(rows);
