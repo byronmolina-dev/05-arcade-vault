@@ -18,12 +18,16 @@ function getServerUserSnapshot() {
 
 export default function Nav() {
   const pathname = usePathname();
-  const user = useSyncExternalStore(subscribeToUser, getUser, getServerUserSnapshot);
+  const user = useSyncExternalStore(
+    subscribeToUser,
+    getUser,
+    getServerUserSnapshot,
+  );
   const [open, setOpen] = useState(false);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
-    if (href === "/games") return pathname === "/games" || pathname.startsWith("/juegos");
+    if (href === "/games") return pathname.startsWith("/games");
     return pathname === href;
   };
 
@@ -45,7 +49,11 @@ export default function Nav() {
         </Link>
         <div className="links">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className={isActive(link.href) ? "active" : ""}>
+            <Link
+              key={link.href}
+              href={link.href}
+              className={isActive(link.href) ? "active" : ""}
+            >
               {link.label}
             </Link>
           ))}
@@ -64,14 +72,24 @@ export default function Nav() {
             Iniciar Sesión
           </Link>
         )}
-        <button className="btn ghost hamburger" onClick={() => setOpen(true)} aria-label="Menú">
+        <button
+          className="btn ghost hamburger"
+          onClick={() => setOpen(true)}
+          aria-label="Menú"
+        >
           ≡
         </button>
       </nav>
 
-      <div className={`av-mobile-backdrop${open ? " open" : ""}`} onClick={closeMenu} />
+      <div
+        className={`av-mobile-backdrop${open ? " open" : ""}`}
+        onClick={closeMenu}
+      />
       <aside className={`av-mobile-panel${open ? " open" : ""}`}>
-        <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>
+        <div
+          className="pixel neon-cyan"
+          style={{ fontSize: 11, marginBottom: 16 }}
+        >
           MENÚ
         </div>
         {NAV_LINKS.map((link) => (
@@ -84,11 +102,22 @@ export default function Nav() {
             {link.label}
           </Link>
         ))}
-        <Link href="/auth" className={isActive("/auth") ? "active" : ""} onClick={closeMenu}>
+        <Link
+          href="/auth"
+          className={isActive("/auth") ? "active" : ""}
+          onClick={closeMenu}
+        >
           {user ? "Cuenta" : "Iniciar Sesión"}
         </Link>
         <div style={{ flex: 1 }} />
-        <div className="pixel" style={{ fontSize: 9, color: "var(--ink-faint)", letterSpacing: "0.16em" }}>
+        <div
+          className="pixel"
+          style={{
+            fontSize: 9,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.16em",
+          }}
+        >
           CRÉDITOS · 03
         </div>
       </aside>
