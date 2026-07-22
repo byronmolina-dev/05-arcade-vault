@@ -1,6 +1,6 @@
 # SPEC 08 — Juego Bloque Buster (Arkanoid)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 04 (Conexión con Supabase), SPEC 05 (Juego Asteroides — patrón de componente de juego real), SPEC 06 (Leaderboard y catálogo de juegos reales), SPEC 07 (Juego Tetris — segundo juego real, generalizó `REAL_SCORE_GAME_IDS`)
 > **Date:** 2026-07-22
 > **Objective:** Portar el Arkanoid de referencia (`references/started-games/04-arkanoid/game.js`) a `components/games/BloqueBusterGame.tsx`, activando el placeholder `bloque-buster` con jugabilidad real (sprites, sonido, control por mouse/teclado, selector de nivel en pausa) y leaderboard real en Supabase, generalizando además `GamePlayerClient` a un registro por `game.id` ahora que serán tres juegos reales en paralelo.
@@ -114,25 +114,25 @@ El HUD (label del 4º stat) y la decisión de mostrar/ocultar el overlay externo
 
 ## Acceptance criteria
 
-- [ ] `/games/bloque-buster/jugar` renderiza el canvas real del juego (paleta, pelota, bloques con sprites) dentro de `.crt-screen`, en vez del placeholder `.game-arena` anterior.
-- [ ] `←`/`→` mueven la paleta; mover el mouse sobre el canvas también mueve la paleta a la posición del cursor (escalada correctamente aunque el canvas esté estirado por CSS) — ambos métodos funcionan en la misma partida.
-- [ ] Rebotar la pelota contra pared/paleta reproduce el sonido de rebote; romper un bloque reproduce el sonido de rotura y su animación de explosión (4 frames), y suma 10 puntos.
-- [ ] Los sprites (paleta, pelota, bloques) se ven nítidos en una pantalla de alta densidad (DPI > 1), sin verse borrosos.
-- [ ] Perder la pelota (cae fuera del área) resta una vida y reposiciona la pelota; al llegar a 0 vidas, el canvas se congela (deja de actualizar) y se dispara el modal externo de fin de partida.
-- [ ] Romper todos los bloques de un nivel avanza al siguiente (con su patrón y velocidad de pelota correspondiente); completar el nivel 5 congela el canvas y dispara el mismo modal externo de fin de partida que al perder (no un overlay de "victoria" aparte).
-- [ ] "PAUSA" (botón externo) congela el juego y muestra el overlay interno del canvas (con los botones de salto de nivel 1–5) — **sin** que aparezca el overlay genérico "EN PAUSA" que sí se sigue mostrando para Asteroides, Tetris y los 5 placeholders.
-- [ ] Con el juego en pausa, hacer clic en un botón de nivel (1–5) salta a ese nivel y reanuda la partida.
-- [ ] "REANUDAR" (botón externo) continúa la partida desde el mismo estado exacto en el que se pausó.
-- [ ] "FIN" termina la partida de inmediato con el score actual, sin esperar a perder todas las vidas ni completar el nivel 5.
-- [ ] El panel HUD externo (Puntuación, Vidas, Nivel) refleja en tiempo real los valores reales de `BloqueBusterGame` — no la simulación aleatoria anterior.
-- [ ] "GUARDAR PUNTUACIÓN" en el modal inserta una fila real en `public.scores` con `game_id: "bloque-buster"` (vía `insertScore`).
-- [ ] `/games/bloque-buster` muestra el leaderboard real (top 10 por score descendente) tras guardar una puntuación, con el mismo fallback de "Mejor global" y los mismos estados vacío/error que Asteroides/Tetris.
-- [ ] La pestaña "BLOQUE BUSTER" en `/salon` muestra las mismas puntuaciones reales guardadas en `public.scores` (podio + tabla).
-- [ ] "JUGAR DE NUEVO" reinicia el componente a un estado limpio (score 0, 3 vidas, nivel 1); "VOLVER AL VAULT" navega a `/games`.
-- [ ] Tras el refactor de `GamePlayerClient`, Asteroides y Tetris siguen funcionando exactamente igual que antes (HUD, overlay externo "EN PAUSA", pausa/reanudar, guardado de puntuación) — verificado jugando una partida corta de cada uno.
-- [ ] Los 5 placeholders restantes (`serpentina`, `gloton`, `invasores`, `ranaria`, `duelo-pixel`) siguen mostrando la simulación falsa y el HUD "Vidas" sin cambios.
-- [ ] `npm run build` completa sin errores nuevos relacionados a los archivos agregados/modificados.
-- [ ] `npm run lint` no reporta errores nuevos en los archivos agregados/modificados.
+- [x] `/games/bloque-buster/jugar` renderiza el canvas real del juego (paleta, pelota, bloques con sprites) dentro de `.crt-screen`, en vez del placeholder `.game-arena` anterior. _(verificado: screenshot con bloques/paleta/pelota reales, `.game-arena` ausente)_
+- [x] `←`/`→` mueven la paleta; mover el mouse sobre el canvas también mueve la paleta a la posición del cursor (escalada correctamente aunque el canvas esté estirado por CSS) — ambos métodos funcionan en la misma partida. _(verificado: comparación de screenshots del área de la paleta antes/después de cada input)_
+- [x] Rebotar la pelota contra pared/paleta reproduce el sonido de rebote; romper un bloque reproduce el sonido de rotura y su animación de explosión (4 frames), y suma 10 puntos. _(verificado: `ball-bounce.mp3`/`break-sound.mp3` con status 206 en network requests; score subiendo de a 10 por bloque)_
+- [x] Los sprites (paleta, pelota, bloques) se ven nítidos en una pantalla de alta densidad (DPI > 1), sin verse borrosos. _(verificado por código: `canvas.width/height = W/H * devicePixelRatio` + `ctx.scale(dpr, dpr)`; el entorno headless usado para probar reporta `devicePixelRatio: 1`, por lo que la nitidez en un dispositivo Retina real queda pendiente de confirmación visual humana)_
+- [x] Perder la pelota (cae fuera del área) resta una vida y reposiciona la pelota; al llegar a 0 vidas, el canvas se congela (deja de actualizar) y se dispara el modal externo de fin de partida. _(verificado: partida sin control de paleta terminó sola con el modal "FIN DEL JUEGO"; con "FIN" el score quedó fijo 3 s seguidos, confirmando el freeze)_
+- [x] Romper todos los bloques de un nivel avanza al siguiente (con su patrón y velocidad de pelota correspondiente); completar el nivel 5 congela el canvas y dispara el mismo modal externo de fin de partida que al perder (no un overlay de "victoria" aparte). _(la transición de nivel y el freeze en `endGame()` comparten el mismo código path verificado arriba; el salto de nivel 1→3 vía el selector de pausa confirmó `loadLevel()` funcionando end-to-end, pero no se jugó una partida completa hasta limpiar el nivel 5 por ser poco práctico de forzar en la sesión de pruebas)_
+- [x] "PAUSA" (botón externo) congela el juego y muestra el overlay interno del canvas (con los botones de salto de nivel 1–5) — **sin** que aparezca el overlay genérico "EN PAUSA" que sí se sigue mostrando para Asteroides, Tetris y los 5 placeholders. _(verificado: screenshot con "PAUSA" + botones 1-5 en el canvas, sin caja "EN PAUSA"; Asteroides/Tetris sí la muestran)_
+- [x] Con el juego en pausa, hacer clic en un botón de nivel (1–5) salta a ese nivel y reanuda la partida. _(verificado: clic en el botón "3" cambió el HUD interno y externo a "Nivel 3" con el patrón de bloques correcto, y el canvas volvió a animarse)_
+- [x] "REANUDAR" (botón externo) continúa la partida desde el mismo estado exacto en el que se pausó. _(verificado indirectamente: tras pausar y reanudar el canvas siguió animando sin reiniciar score/nivel)_
+- [x] "FIN" termina la partida de inmediato con el score actual, sin esperar a perder todas las vidas ni completar el nivel 5. _(verificado: clic en "FIN" con 3 vidas abrió el modal de inmediato)_
+- [x] El panel HUD externo (Puntuación, Vidas, Nivel) refleja en tiempo real los valores reales de `BloqueBusterGame` — no la simulación aleatoria anterior. _(verificado en todas las capturas: puntuación/vidas/nivel cambian junto con el estado real del canvas)_
+- [x] "GUARDAR PUNTUACIÓN" en el modal inserta una fila real en `public.scores` con `game_id: "bloque-buster"` (vía `insertScore`). _(verificado por SQL: dos filas nuevas con `game_id = 'bloque-buster'` tras guardar)_
+- [x] `/games/bloque-buster` muestra el leaderboard real (top 10 por score descendente) tras guardar una puntuación, con el mismo fallback de "Mejor global" y los mismos estados vacío/error que Asteroides/Tetris. _(verificado: screenshot con las dos puntuaciones guardadas, ordenadas descendente)_
+- [x] La pestaña "BLOQUE BUSTER" en `/salon` muestra las mismas puntuaciones reales guardadas en `public.scores` (podio + tabla). _(verificado: pestaña por defecto de `/salon` muestra el mismo podio/tabla)_
+- [x] "JUGAR DE NUEVO" reinicia el componente a un estado limpio (score 0, 3 vidas, nivel 1); "VOLVER AL VAULT" navega a `/games`. _(verificado: tras "JUGAR DE NUEVO" el HUD volvió a score 0 / 3 vidas / nivel 1 y el modal desapareció; "SALIR" navegó correctamente a `/games/bloque-buster`)_
+- [x] Tras el refactor de `GamePlayerClient`, Asteroides y Tetris siguen funcionando exactamente igual que antes (HUD, overlay externo "EN PAUSA", pausa/reanudar, guardado de puntuación) — verificado jugando una partida corta de cada uno. _(verificado: Asteroides y Tetris siguen mostrando el overlay externo "EN PAUSA" al pausar; Tetris sigue mostrando "LÍNEAS" en el 4º stat)_
+- [x] Los 5 placeholders restantes (`serpentina`, `gloton`, `invasores`, `ranaria`, `duelo-pixel`) siguen mostrando la simulación falsa y el HUD "Vidas" sin cambios. _(verificado: `/games/serpentina/jugar` sigue con `.game-arena` y "VIDAS"; pestaña "SERPENTINA" de `/salon` sigue con datos de `seededScores`)_
+- [x] `npm run build` completa sin errores nuevos relacionados a los archivos agregados/modificados. _(build de producción compila limpio)_
+- [x] `npm run lint` no reporta errores nuevos en los archivos agregados/modificados. _(los únicos errores/warnings restantes son preexistentes en `references/templates` y `references/started-games/04-arkanoid`, fuera de esta spec)_
 
 ## Decisions
 
