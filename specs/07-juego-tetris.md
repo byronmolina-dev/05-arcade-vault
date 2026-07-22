@@ -1,6 +1,6 @@
 # SPEC 07 — Juego Tetris (renombre de slot + adaptación del juego de referencia)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 04 (Conexión con Supabase), SPEC 05 (Juego Asteroides — patrón de componente de juego real), SPEC 06 (Leaderboard y catálogo de juegos reales)
 > **Date:** 2026-07-22
 > **Objective:** Renombrar el slot placeholder `caida` → `tetris` en el catálogo de Supabase (`public.games`) y adaptar el juego de referencia `references/started-games/03-tetris/game.js` a un componente cliente `components/games/TetrisGame.tsx`, con puntuación, líneas y nivel reales integrados al HUD, y leaderboard real en Supabase (`public.scores`, `game_id: "tetris"`) igual que Asteroides.
@@ -91,25 +91,25 @@ El tablero (`board: number[][]`, 10×20), la pieza actual/siguiente (`current`, 
 
 ## Acceptance criteria
 
-- [ ] En `public.games` ya no existe ningún registro con `id: "caida"`; existe un registro `id: "tetris"`, `title: "TETRIS"`, con el resto de campos (`short`, `long`, `cat`, `cover`, `color`, `best`, `plays`) sin cambios.
-- [ ] `/games` y `/salon` muestran "TETRIS" en el catálogo/pestañas, sin ninguna referencia residual a "CAÍDA".
-- [ ] `/games/tetris/jugar` renderiza el canvas real del juego (tablero, pieza actual, panel interno SCORE/LINES/LEVEL + siguiente pieza) dentro de `.crt-screen`, en vez del placeholder `.game-arena` anterior.
-- [ ] `←`/`→` mueven la pieza, `↑`/`X` rotan (con wall kicks), `↓` hace soft drop, `Espacio` hace hard drop — igual que el juego de referencia.
-- [ ] La pieza fantasma se muestra en la posición de aterrizaje proyectada.
-- [ ] Completar una fila la limpia y baja las de arriba; la puntuación sube según `LINE_SCORES` × nivel; el hard drop y el soft drop suman puntos por celda/fila igual que el original.
-- [ ] El nivel sube cada 10 líneas y la velocidad de caída aumenta según la fórmula original (`max(100, 1000-(level-1)*90)`).
-- [ ] El panel HUD externo (Puntuación, Líneas, Nivel) refleja en tiempo real el `score`, `lines` y `level` reales del juego — no la simulación aleatoria anterior.
-- [ ] El panel interno del canvas (SCORE/LINES/LEVEL + siguiente pieza) sigue visible y funcional en paralelo al HUD externo.
-- [ ] La tecla `P` ya no pausa el juego; "PAUSA" (botón externo) congela el juego (nada se mueve) y muestra el overlay "EN PAUSA" existente; "REANUDAR" continúa desde el mismo estado exacto.
-- [ ] "FIN" termina la partida de inmediato con el score actual, sin esperar a que una pieza se bloquee arriba del tablero.
-- [ ] Que una pieza nueva colisione al aparecer (o presionar "FIN") congela el canvas y abre el modal existente de fin de partida — el overlay interno "GAME OVER" del juego original ya **no** aparece.
-- [ ] "GUARDAR PUNTUACIÓN" en el modal inserta una fila real en `public.scores` con `game_id: "tetris"` (vía `insertScore`), igual que Asteroides.
-- [ ] `/games/tetris` muestra el leaderboard real (top 10 por score descendente) tras guardar una puntuación, y "Mejor global" refleja el `MAX(score)` real; antes de la primera puntuación guardada muestra el estado vacío existente.
-- [ ] La pestaña "TETRIS" en `/salon` muestra las mismas puntuaciones reales guardadas en `public.scores` (podio + tabla), con los mismos estados de carga/vacío/error que ya existen para Asteroides.
-- [ ] "JUGAR DE NUEVO" reinicia el componente a un estado limpio (score 0, líneas 0, nivel 1); "VOLVER AL VAULT" navega a `/games`.
-- [ ] Los otros 6 placeholders (`bloque-buster`, `serpentina`, `gloton`, `invasores`, `ranaria`, `duelo-pixel`) y Asteroides siguen funcionando exactamente igual que antes (HUD con "Vidas", simulación falsa o leaderboard real según corresponda).
-- [ ] `npm run build` completa sin errores nuevos relacionados a los archivos agregados/modificados.
-- [ ] `npm run lint` no reporta errores nuevos en los archivos agregados/modificados.
+- [x] En `public.games` ya no existe ningún registro con `id: "caida"`; existe un registro `id: "tetris"`, `title: "TETRIS"`, con el resto de campos (`short`, `long`, `cat`, `cover`, `color`, `best`, `plays`) sin cambios. _(verificado por SQL: `select ... from public.games where id in ('caida','tetris')`)_
+- [x] `/games` y `/salon` muestran "TETRIS" en el catálogo/pestañas, sin ninguna referencia residual a "CAÍDA". _(verificado: `curl` a ambas rutas solo devuelve "TETRIS")_
+- [x] `/games/tetris/jugar` renderiza el canvas real del juego (tablero, pieza actual, panel interno SCORE/LINES/LEVEL + siguiente pieza) dentro de `.crt-screen`, en vez del placeholder `.game-arena` anterior. _(verificado: HTML renderizado contiene `<canvas width="800" height="600">`, sin `.game-arena`)_
+- [x] `←`/`→` mueven la pieza, `↑`/`X` rotan (con wall kicks), `↓` hace soft drop, `Espacio` hace hard drop — igual que el juego de referencia. _(jugado manualmente por el usuario; se detectó y corrigió un bug de scroll de página con las flechas)_
+- [x] La pieza fantasma se muestra en la posición de aterrizaje proyectada. _(confirmado por el usuario jugando una partida real)_
+- [x] Completar una fila la limpia y baja las de arriba; la puntuación sube según `LINE_SCORES` × nivel; el hard drop y el soft drop suman puntos por celda/fila igual que el original. _(confirmado por el usuario jugando una partida real)_
+- [x] El nivel sube cada 10 líneas y la velocidad de caída aumenta según la fórmula original (`max(100, 1000-(level-1)*90)`). _(confirmado por el usuario jugando una partida real)_
+- [x] El panel HUD externo (Puntuación, Líneas, Nivel) refleja en tiempo real el `score`, `lines` y `level` reales del juego — no la simulación aleatoria anterior. _(confirmado por el usuario jugando una partida real)_
+- [x] El panel interno del canvas (SCORE/LINES/LEVEL + siguiente pieza) sigue visible y funcional en paralelo al HUD externo. _(confirmado por el usuario jugando una partida real)_
+- [x] La tecla `P` ya no pausa el juego; "PAUSA" (botón externo) congela el juego (nada se mueve) y muestra el overlay "EN PAUSA" existente; "REANUDAR" continúa desde el mismo estado exacto. _(confirmado por el usuario jugando una partida real)_
+- [x] "FIN" termina la partida de inmediato con el score actual, sin esperar a que una pieza se bloquee arriba del tablero. _(confirmado por el usuario jugando una partida real)_
+- [x] Que una pieza nueva colisione al aparecer (o presionar "FIN") congela el canvas y abre el modal existente de fin de partida — el overlay interno "GAME OVER" del juego original ya **no** aparece. _(confirmado por el usuario jugando una partida real)_
+- [x] "GUARDAR PUNTUACIÓN" en el modal inserta una fila real en `public.scores` con `game_id: "tetris"` (vía `insertScore`), igual que Asteroides. _(confirmado por el usuario jugando una partida real)_
+- [x] `/games/tetris` muestra el leaderboard real (top 10 por score descendente) tras guardar una puntuación, y "Mejor global" refleja el `MAX(score)` real; antes de la primera puntuación guardada muestra el estado vacío existente. _(confirmado por el usuario jugando una partida real)_
+- [x] La pestaña "TETRIS" en `/salon` muestra las mismas puntuaciones reales guardadas en `public.scores` (podio + tabla), con los mismos estados de carga/vacío/error que ya existen para Asteroides. _(confirmado por el usuario jugando una partida real)_
+- [x] "JUGAR DE NUEVO" reinicia el componente a un estado limpio (score 0, líneas 0, nivel 1); "VOLVER AL VAULT" navega a `/games`. _(confirmado por el usuario jugando una partida real)_
+- [x] Los otros 6 placeholders (`bloque-buster`, `serpentina`, `gloton`, `invasores`, `ranaria`, `duelo-pixel`) y Asteroides siguen funcionando exactamente igual que antes (HUD con "Vidas", simulación falsa o leaderboard real según corresponda). _(verificado: `curl` a `/games/asteroides/jugar` y `/games/bloque-buster/jugar` muestran "Vidas" sin cambios; el placeholder conserva `.game-arena`)_
+- [x] `npm run build` completa sin errores nuevos relacionados a los archivos agregados/modificados. _(build de producción compila limpio)_
+- [x] `npm run lint` no reporta errores nuevos en los archivos agregados/modificados. _(los únicos errores/warnings restantes son preexistentes en `references/templates` y `references/started-games/04-arkanoid`, fuera de esta spec)_
 
 ## Decisions
 
