@@ -1,17 +1,48 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import gamesData from "@/data/games.json";
 import { seededScores } from "@/lib/scores";
-import type { Game } from "@/lib/types";
-
-const games = gamesData.games as Game[];
+import { getGameById } from "@/lib/supabase/games";
+import { getTopScores } from "@/lib/supabase/scores";
 
 export default async function GameDetailPage(props: PageProps<"/games/[id]">) {
   const { id } = await props.params;
-  const game = games.find((g) => g.id === id);
+
+  let game;
+  try {
+    game = await getGameById(id);
+  } catch {
+    return (
+      <div
+        style={{ textAlign: "center", padding: 80, color: "var(--ink-faint)" }}
+      >
+        <div
+          className="pixel"
+          style={{ fontSize: 14, color: "var(--magenta)", marginBottom: 12 }}
+        >
+          ERROR
+        </div>
+        <div>No se pudo cargar el juego.</div>
+      </div>
+    );
+  }
   if (!game) notFound();
 
-  const scores = seededScores(id.length * 17 + 3, 10);
+  const isAsteroides = game.id === "asteroides";
+  let leaderboardError = false;
+  let scores = isAsteroides ? [] : seededScores(id.length * 17 + 3, 10);
+
+  if (isAsteroides) {
+    try {
+      scores = await getTopScores("asteroides", 10);
+    } catch {
+      leaderboardError = true;
+    }
+  }
+
+  const best =
+    isAsteroides && scores.length > 0
+      ? Math.max(...scores.map((s) => s.score))
+      : game.best;
 
   return (
     <div className="av-detail fade-in">
@@ -42,7 +73,7 @@ export default async function GameDetailPage(props: PageProps<"/games/[id]">) {
                   textShadow: "0 0 6px rgba(255,0,110,0.5)",
                 }}
               >
-                {game.best.toLocaleString("es-ES")}
+                {best.toLocaleString("es-ES")}
               </div>
             </div>
             <div>
@@ -72,27 +103,49 @@ export default async function GameDetailPage(props: PageProps<"/games/[id]">) {
       <aside>
         <div className="leaderboard">
           <h3>MEJORES PUNTUACIONES</h3>
-          {scores.map((r, i) => (
+          {isAsteroides && leaderboardError ? (
             <div
-              key={r.rank}
-              className={`lb-row${i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : ""}`}
+              style={{
+                padding: 24,
+                textAlign: "center",
+                color: "var(--ink-faint)",
+              }}
             >
-              <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
-              <div className="pl">
-                {r.name}
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: "var(--ink-faint)",
-                    letterSpacing: "0.1em",
-                  }}
-                >
-                  {r.date}
-                </div>
-              </div>
-              <div className="sc">{r.score.toLocaleString("es-ES")}</div>
+              No se pudo cargar el leaderboard.
             </div>
-          ))}
+          ) : isAsteroides && scores.length === 0 ? (
+            <div
+              style={{
+                padding: 24,
+                textAlign: "center",
+                color: "var(--ink-faint)",
+              }}
+            >
+              Aún no hay puntuaciones guardadas.
+            </div>
+          ) : (
+            scores.map((r, i) => (
+              <div
+                key={r.rank}
+                className={`lb-row${i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : ""}`}
+              >
+                <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
+                <div className="pl">
+                  {r.name}
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: "var(--ink-faint)",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    {r.date}
+                  </div>
+                </div>
+                <div className="sc">{r.score.toLocaleString("es-ES")}</div>
+              </div>
+            ))
+          )}
         </div>
       </aside>
     </div>
