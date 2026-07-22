@@ -1,6 +1,6 @@
 # SPEC 04 — Conexión con Supabase
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** —
 > **Date:** 2026-07-21
 > **Objective:** Conectar la aplicación Next.js al proyecto de Supabase existente agregando los paquetes oficiales (`@supabase/supabase-js`, `@supabase/ssr`), helpers de cliente para browser y server, y las variables de entorno documentadas en `.env.template`, sin implementar todavía auth, persistencia de puntuaciones ni salón de la fama real.
@@ -54,14 +54,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
 ## Acceptance criteria
 
-- [ ] `@supabase/supabase-js` y `@supabase/ssr` aparecen en las dependencias de `package.json`.
-- [ ] `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` están documentadas (vacías) en `.env.template` y no están hardcodeadas en ningún archivo versionado.
-- [ ] `lib/supabase/client.ts` exporta `createClient()` y compila sin errores de TypeScript.
-- [ ] `lib/supabase/server.ts` exporta `createClient()` async y compila sin errores de TypeScript.
-- [ ] `npm run build` completa sin errores nuevos relacionados a los archivos agregados.
-- [ ] `npm run lint` no reporta errores nuevos en los archivos agregados.
-- [ ] Un smoke check manual confirma que `createClient().auth.getSession()` (browser o server) no lanza excepción usando las credenciales reales de `.env.local` contra el proyecto Supabase ya conectado.
-- [ ] Ninguna pantalla existente (`/auth`, `/salon`, `/juegos/[id]/jugar`, Nav) cambia de comportamiento: siguen usando `lib/storage.ts` como hoy.
+- [x] `@supabase/supabase-js` y `@supabase/ssr` aparecen en las dependencias de `package.json`.
+- [x] `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` están documentadas (vacías) en `.env.template` y no están hardcodeadas en ningún archivo versionado. (Nombre ajustado de `ANON_KEY` a `PUBLISHABLE_KEY`: el proyecto Supabase real ya usa el formato nuevo de claves públicas `sb_publishable_...`, no un JWT legacy de anon key.)
+- [x] `lib/supabase/client.ts` exporta `createClient()` y compila sin errores de TypeScript.
+- [x] `lib/supabase/server.ts` exporta `createClient()` async y compila sin errores de TypeScript.
+- [x] `npm run build` completa sin errores nuevos relacionados a los archivos agregados.
+- [x] `npm run lint` no reporta errores nuevos en los archivos agregados.
+- [x] Un smoke check manual confirma que `createClient().auth.getSession()` (browser o server) no lanza excepción usando las credenciales reales de `.env.local` contra el proyecto Supabase ya conectado.
+- [x] Ninguna pantalla existente (`/auth`, `/salon`, `/juegos/[id]/jugar`, Nav) cambia de comportamiento: siguen usando `lib/storage.ts` como hoy.
 
 ## Decisions
 
