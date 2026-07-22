@@ -1,6 +1,6 @@
 # SPEC 06 — Leaderboard y catálogo de juegos reales (Supabase)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 04 (Conexión con Supabase), SPEC 05 (Juego Asteroides)
 > **Date:** 2026-07-22
 > **Objective:** Reemplazar `data/games.json` y el guardado local de puntuaciones de Asteroides por dos tablas reales en Supabase (`games` y `scores`), para que el catálogo de juegos (`/games`, `/games/[id]`) y el leaderboard de Asteroides (ficha del juego y pestaña correspondiente de `/salon`) dejen de depender de datos estáticos o simulados, sin tocar autenticación ni los otros 7 juegos.
@@ -117,21 +117,21 @@ export async function getTopScoresClient(
 
 ## Acceptance criteria
 
-- [ ] En Supabase existen las tablas `public.games` (8 filas, una por juego) y `public.scores` (vacía tras la migración), ambas con RLS habilitado.
-- [ ] `public.games` permite `SELECT` público y no permite `INSERT`/`UPDATE`/`DELETE` desde el cliente (verificado con el policy check de Supabase / `get_advisors`).
-- [ ] `public.scores` permite `SELECT` e `INSERT` público, y no permite `UPDATE`/`DELETE` desde el cliente.
-- [ ] `data/games.json` ya no existe en el repo y no hay ningún `import` restante que lo referencie.
-- [ ] `/games` carga la lista de los 8 juegos desde Supabase (no desde JSON estático); la búsqueda por nombre y el filtro por categoría siguen funcionando igual que antes.
-- [ ] `/games/asteroides` (antes de guardar cualquier puntuación) muestra un estado vacío en el leaderboard ("Aún no hay puntuaciones guardadas." o equivalente) en vez de una tabla con datos falsos.
-- [ ] Jugar una partida de Asteroides y presionar "GUARDAR PUNTUACIÓN" inserta una fila real en `public.scores` con `game_id: "asteroides"`.
-- [ ] Después de guardar una puntuación de Asteroides, `/games/asteroides` muestra esa fila en el leaderboard (top 10 por score descendente), y el "Mejor global" refleja el `MAX(score)` real.
-- [ ] La pestaña "ASTEROIDES" en `/salon` muestra las mismas puntuaciones reales guardadas en `public.scores` (podio + tabla), no datos generados por `seededScores`.
-- [ ] Las otras 7 pestañas en `/salon` (`bloque-buster`, `caida`, `serpentina`, `gloton`, `invasores`, `ranaria`, `duelo-pixel`) siguen mostrando datos de `seededScores()` sin cambios.
-- [ ] Las fichas de los otros 7 juegos en `/games/[id]` siguen mostrando el leaderboard de `seededScores()` sin cambios, y su "Mejor global" sigue siendo el valor estático `game.best`.
-- [ ] Jugar y "GUARDAR PUNTUACIÓN" en cualquiera de los otros 7 juegos sigue guardando en `localStorage` vía `pushScore` (no en Supabase), igual que antes.
-- [ ] Si se simula una falla de red hacia Supabase (o la tabla `scores` está vacía), `/games/asteroides` y la pestaña "ASTEROIDES" de `/salon` muestran un mensaje de error/estado vacío, sin quedar en blanco ni lanzar una excepción no controlada.
-- [ ] `npm run build` completa sin errores nuevos relacionados a los archivos agregados/modificados.
-- [ ] `npm run lint` no reporta errores nuevos en los archivos agregados/modificados.
+- [x] En Supabase existen las tablas `public.games` (8 filas, una por juego) y `public.scores` (vacía tras la migración), ambas con RLS habilitado.
+- [x] `public.games` permite `SELECT` público y no permite `INSERT`/`UPDATE`/`DELETE` desde el cliente (verificado con el policy check de Supabase / `get_advisors`).
+- [x] `public.scores` permite `SELECT` e `INSERT` público, y no permite `UPDATE`/`DELETE` desde el cliente.
+- [x] `data/games.json` ya no existe en el repo y no hay ningún `import` restante que lo referencie.
+- [x] `/games` carga la lista de los 8 juegos desde Supabase (no desde JSON estático); la búsqueda por nombre y el filtro por categoría siguen funcionando igual que antes.
+- [x] `/games/asteroides` (antes de guardar cualquier puntuación) muestra un estado vacío en el leaderboard ("Aún no hay puntuaciones guardadas." o equivalente) en vez de una tabla con datos falsos.
+- [x] Jugar una partida de Asteroides y presionar "GUARDAR PUNTUACIÓN" inserta una fila real en `public.scores` con `game_id: "asteroides"`.
+- [x] Después de guardar una puntuación de Asteroides, `/games/asteroides` muestra esa fila en el leaderboard (top 10 por score descendente), y el "Mejor global" refleja el `MAX(score)` real.
+- [x] La pestaña "ASTEROIDES" en `/salon` muestra las mismas puntuaciones reales guardadas en `public.scores` (podio + tabla), no datos generados por `seededScores`.
+- [x] Las otras 7 pestañas en `/salon` (`bloque-buster`, `caida`, `serpentina`, `gloton`, `invasores`, `ranaria`, `duelo-pixel`) siguen mostrando datos de `seededScores()` sin cambios.
+- [x] Las fichas de los otros 7 juegos en `/games/[id]` siguen mostrando el leaderboard de `seededScores()` sin cambios, y su "Mejor global" sigue siendo el valor estático `game.best`.
+- [x] Jugar y "GUARDAR PUNTUACIÓN" en cualquiera de los otros 7 juegos sigue guardando en `localStorage` vía `pushScore` (no en Supabase), igual que antes.
+- [x] Si se simula una falla de red hacia Supabase (o la tabla `scores` está vacía), `/games/asteroides` y la pestaña "ASTEROIDES" de `/salon` muestran un mensaje de error/estado vacío, sin quedar en blanco ni lanzar una excepción no controlada.
+- [x] `npm run build` completa sin errores nuevos relacionados a los archivos agregados/modificados.
+- [x] `npm run lint` no reporta errores nuevos en los archivos agregados/modificados.
 
 ## Decisions
 
