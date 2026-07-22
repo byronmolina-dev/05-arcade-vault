@@ -7,6 +7,7 @@ import { insertScore } from "@/lib/supabase/scoresClient";
 import { REAL_SCORE_GAME_IDS, type Game } from "@/lib/types";
 import AsteroidsGame from "@/components/games/AsteroidsGame";
 import TetrisGame from "@/components/games/TetrisGame";
+import BloqueBusterGame from "@/components/games/BloqueBusterGame";
 
 const LIVES = 3;
 
@@ -24,6 +25,10 @@ type RealGameConfig = {
 const REAL_GAME_CONFIG: Partial<Record<string, RealGameConfig>> = {
   asteroides: { fourthStatLabel: "Vidas", suppressExternalPauseOverlay: false },
   tetris: { fourthStatLabel: "Líneas", suppressExternalPauseOverlay: false },
+  "bloque-buster": {
+    fourthStatLabel: "Vidas",
+    suppressExternalPauseOverlay: true,
+  },
 };
 
 function getServerUserSnapshot() {
@@ -163,6 +168,14 @@ export default function GamePlayerClient({ game }: { game: Game }) {
             />
           ) : game.id === "asteroides" ? (
             <AsteroidsGame
+              ref={gameRef}
+              onScoreChange={setRealScore}
+              onLivesChange={setRealLives}
+              onLevelChange={setRealLevel}
+              onGameOver={() => setOver(true)}
+            />
+          ) : game.id === "bloque-buster" ? (
+            <BloqueBusterGame
               ref={gameRef}
               onScoreChange={setRealScore}
               onLivesChange={setRealLives}
