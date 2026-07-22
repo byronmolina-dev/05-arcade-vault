@@ -132,6 +132,73 @@ type Ball = {
   vy: number;
 };
 
+type SpriteFrame = { sx: number; sy: number; sw: number; sh: number };
+
+const SPRITESHEET_SRC = "/games/bloque-buster/spritesheet-breakout.png";
+
+const SPRITES: {
+  paddle: SpriteFrame;
+  ball: SpriteFrame;
+  blocks: Record<BlockColor, SpriteFrame>;
+} = {
+  paddle: { sx: 32, sy: 112, sw: 162, sh: 14 },
+  ball: { sx: 32, sy: 32, sw: 16, sh: 16 },
+  blocks: {
+    gray: { sx: 32, sy: 288, sw: 32, sh: 16 },
+    red: { sx: 32, sy: 176, sw: 32, sh: 16 },
+    yellow: { sx: 32, sy: 240, sw: 32, sh: 16 },
+    cyan: { sx: 32, sy: 192, sw: 32, sh: 16 },
+    magenta: { sx: 32, sy: 224, sw: 32, sh: 16 },
+    hotpink: { sx: 32, sy: 256, sw: 32, sh: 16 },
+    green: { sx: 32, sy: 208, sw: 32, sh: 16 },
+  },
+};
+
+const EXPLOSION_FRAMES: Record<BlockColor, SpriteFrame[]> = {
+  red: [
+    { sx: 256, sy: 176, sw: 32, sh: 16 },
+    { sx: 288, sy: 176, sw: 32, sh: 16 },
+    { sx: 320, sy: 176, sw: 32, sh: 16 },
+    { sx: 352, sy: 176, sw: 32, sh: 16 },
+  ],
+  cyan: [
+    { sx: 256, sy: 192, sw: 32, sh: 16 },
+    { sx: 288, sy: 192, sw: 32, sh: 16 },
+    { sx: 320, sy: 192, sw: 32, sh: 16 },
+    { sx: 352, sy: 192, sw: 32, sh: 16 },
+  ],
+  green: [
+    { sx: 256, sy: 208, sw: 32, sh: 16 },
+    { sx: 288, sy: 208, sw: 32, sh: 16 },
+    { sx: 320, sy: 208, sw: 32, sh: 16 },
+    { sx: 352, sy: 208, sw: 32, sh: 16 },
+  ],
+  magenta: [
+    { sx: 256, sy: 224, sw: 32, sh: 16 },
+    { sx: 288, sy: 224, sw: 32, sh: 16 },
+    { sx: 320, sy: 224, sw: 32, sh: 16 },
+    { sx: 352, sy: 224, sw: 32, sh: 16 },
+  ],
+  yellow: [
+    { sx: 256, sy: 240, sw: 32, sh: 16 },
+    { sx: 288, sy: 240, sw: 32, sh: 16 },
+    { sx: 320, sy: 240, sw: 32, sh: 16 },
+    { sx: 352, sy: 240, sw: 32, sh: 16 },
+  ],
+  hotpink: [
+    { sx: 256, sy: 256, sw: 32, sh: 16 },
+    { sx: 288, sy: 256, sw: 32, sh: 16 },
+    { sx: 320, sy: 256, sw: 32, sh: 16 },
+    { sx: 352, sy: 256, sw: 32, sh: 16 },
+  ],
+  gray: [
+    { sx: 256, sy: 176, sw: 32, sh: 16 },
+    { sx: 288, sy: 176, sw: 32, sh: 16 },
+    { sx: 320, sy: 176, sw: 32, sh: 16 },
+    { sx: 352, sy: 176, sw: 32, sh: 16 },
+  ],
+};
+
 export type BloqueBusterGameHandle = {
   pause(): void;
   resume(): void;
@@ -176,6 +243,50 @@ const BloqueBusterGame = forwardRef<
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    let spriteSheet: HTMLCanvasElement | null = null;
+    let spriteLoaded = false;
+
+    function loadSpritesheet(onLoad: () => void) {
+      const img = new Image();
+      img.onload = () => {
+        const offscreen = document.createElement("canvas");
+        offscreen.width = img.width;
+        offscreen.height = img.height;
+        const offscreenCtx = offscreen.getContext("2d");
+        offscreenCtx?.drawImage(img, 0, 0);
+        spriteSheet = offscreen;
+        spriteLoaded = true;
+        onLoad();
+      };
+      img.src = SPRITESHEET_SRC;
+    }
+
+    function drawFrame(
+      frame: SpriteFrame,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+    ) {
+      if (!spriteLoaded || !spriteSheet) return;
+      ctx!.drawImage(
+        spriteSheet,
+        frame.sx,
+        frame.sy,
+        frame.sw,
+        frame.sh,
+        x,
+        y,
+        w,
+        h,
+      );
+    }
 
     let paddle: Paddle;
     let ball: Ball;
@@ -329,9 +440,56 @@ const BloqueBusterGame = forwardRef<
       reportState();
     }
 
+    function drawHUD() {
+      ctx!.fillStyle = "#fff";
+      ctx!.font = "bold 18px monospace";
+      ctx!.textAlign = "left";
+      ctx!.textBaseline = "top";
+      ctx!.fillText(`Score: ${score}`, 10, 10);
+      ctx!.textAlign = "center";
+      ctx!.fillText(`Nivel: ${currentLevel}`, W / 2, 10);
+
+      const iconSize = 16;
+      const iconGap = 4;
+      for (let i = 0; i < lives; i++) {
+        const bx = W - 10 - (lives - i) * (iconSize + iconGap);
+        drawFrame(SPRITES.ball, bx, 10, iconSize, iconSize);
+      }
+    }
+
     function draw() {
       ctx!.fillStyle = "#000";
       ctx!.fillRect(0, 0, W, H);
+
+      for (const block of blocks) {
+        if (block.alive)
+          drawFrame(
+            SPRITES.blocks[block.color],
+            block.x,
+            block.y,
+            block.w,
+            block.h,
+          );
+      }
+
+      for (const exp of explosions) {
+        const frameIndex = Math.min(
+          Math.floor((exp.elapsed / EXPLOSION_DURATION) * 4),
+          3,
+        );
+        drawFrame(
+          EXPLOSION_FRAMES[exp.color][frameIndex],
+          exp.x,
+          exp.y,
+          exp.w,
+          exp.h,
+        );
+      }
+
+      drawFrame(SPRITES.paddle, paddle.x, paddle.y, paddle.w, paddle.h);
+      drawFrame(SPRITES.ball, ball.x, ball.y, ball.w, ball.h);
+
+      drawHUD();
     }
 
     let lastTime: number | null = null;
@@ -363,9 +521,11 @@ const BloqueBusterGame = forwardRef<
       },
     };
 
-    initGame();
-    reportState();
-    animationId = requestAnimationFrame(loop);
+    loadSpritesheet(() => {
+      initGame();
+      reportState();
+      animationId = requestAnimationFrame(loop);
+    });
 
     return () => {
       cancelAnimationFrame(animationId);
