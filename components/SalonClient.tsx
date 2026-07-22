@@ -32,13 +32,14 @@ export default function SalonClient({ games }: { games: Game[] }) {
   const [prevTab, setPrevTab] = useState(tab);
   if (tab !== prevTab) {
     setPrevTab(tab);
-    if (tab === "asteroides") setAsteroidsStatus("loading");
+    if ((REAL_SCORE_GAME_IDS as readonly string[]).includes(tab))
+      setAsteroidsStatus("loading");
   }
 
   useEffect(() => {
-    if (tab !== "asteroides") return;
+    if (!(REAL_SCORE_GAME_IDS as readonly string[]).includes(tab)) return;
     let cancelled = false;
-    getTopScoresClient("asteroides", 12)
+    getTopScoresClient(tab, 12)
       .then((rows) => {
         if (cancelled) return;
         setAsteroidsRows(rows);

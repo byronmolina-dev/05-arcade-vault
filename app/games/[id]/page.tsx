@@ -36,7 +36,7 @@ export default async function GameDetailPage(props: PageProps<"/games/[id]">) {
 
   if (isAsteroides) {
     try {
-      scores = await getTopScores("asteroides", 10);
+      scores = await getTopScores(game.id, 10);
     } catch {
       leaderboardError = true;
     }
