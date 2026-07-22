@@ -64,6 +64,10 @@ const PIECES: (number[][] | null)[] = [
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
+const PANEL_X = COLS * BLOCK + 20; // 320
+const PANEL_PADDING = 40;
+const NEXT_BLOCK = 30;
+
 type Piece = { type: number; shape: number[][]; x: number; y: number };
 
 export type TetrisGameHandle = {
@@ -293,6 +297,50 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
         }
       }
 
+      function drawPanelStat(label: string, value: string, y: number) {
+        ctx!.textAlign = "left";
+        ctx!.fillStyle = "rgba(255,255,255,0.5)";
+        ctx!.font = "13px monospace";
+        ctx!.fillText(label, PANEL_X + PANEL_PADDING, y);
+        ctx!.fillStyle = "#fff";
+        ctx!.font = "bold 28px monospace";
+        ctx!.fillText(value, PANEL_X + PANEL_PADDING, y + 32);
+      }
+
+      function drawPanel() {
+        ctx!.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx!.lineWidth = 1;
+        ctx!.beginPath();
+        ctx!.moveTo(PANEL_X, 0);
+        ctx!.lineTo(PANEL_X, canvas!.height);
+        ctx!.stroke();
+
+        drawPanelStat("SCORE", score.toLocaleString(), 70);
+        drawPanelStat("LINES", String(lines), 160);
+        drawPanelStat("LEVEL", String(level), 250);
+
+        ctx!.textAlign = "left";
+        ctx!.fillStyle = "rgba(255,255,255,0.5)";
+        ctx!.font = "13px monospace";
+        ctx!.fillText("NEXT", PANEL_X + PANEL_PADDING, 330);
+
+        const boxX = PANEL_X + PANEL_PADDING;
+        const boxY = 350;
+        const boxSize = NEXT_BLOCK * 4;
+        ctx!.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx!.strokeRect(boxX, boxY, boxSize, boxSize);
+
+        const shape = next.shape;
+        const offX = Math.floor((4 - shape[0].length) / 2);
+        const offY = Math.floor((4 - shape.length) / 2);
+        ctx!.save();
+        ctx!.translate(boxX, boxY);
+        for (let r = 0; r < shape.length; r++)
+          for (let c = 0; c < shape[r].length; c++)
+            drawBlock(ctx!, offX + c, offY + r, shape[r][c], NEXT_BLOCK);
+        ctx!.restore();
+      }
+
       function draw() {
         ctx!.fillStyle = "#000";
         ctx!.fillRect(0, 0, canvas!.width, canvas!.height);
@@ -325,6 +373,8 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
               current.shape[r][c],
               BLOCK,
             );
+
+        drawPanel();
       }
 
       function init() {
