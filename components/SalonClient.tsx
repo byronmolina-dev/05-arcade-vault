@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { seededScores } from "@/lib/scores";
 import { getUser, subscribeToUser } from "@/lib/storage";
 import { getTopScoresClient } from "@/lib/supabase/scoresClient";
-import type { Game } from "@/lib/types";
+import { REAL_SCORE_GAME_IDS, type Game } from "@/lib/types";
 
 function getServerUserSnapshot() {
   return null;
@@ -22,7 +22,7 @@ export default function SalonClient({ games }: { games: Game[] }) {
     getServerUserSnapshot,
   );
 
-  const isAsteroides = tab === "asteroides";
+  const isAsteroides = (REAL_SCORE_GAME_IDS as readonly string[]).includes(tab);
   const [asteroidsRows, setAsteroidsRows] = useState<
     ReturnType<typeof seededScores>
   >([]);

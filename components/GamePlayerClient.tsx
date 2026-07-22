@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { getUser, pushScore, subscribeToUser } from "@/lib/storage";
 import { insertScore } from "@/lib/supabase/scoresClient";
-import type { Game } from "@/lib/types";
+import { REAL_SCORE_GAME_IDS, type Game } from "@/lib/types";
 import AsteroidsGame, {
   type AsteroidsGameHandle,
 } from "@/components/games/AsteroidsGame";
@@ -22,7 +22,9 @@ export default function GamePlayerClient({ game }: { game: Game }) {
     getUser,
     getServerUserSnapshot,
   );
-  const isAsteroids = game.id === "asteroides";
+  const isAsteroids = (REAL_SCORE_GAME_IDS as readonly string[]).includes(
+    game.id,
+  );
   const gameRef = useRef<AsteroidsGameHandle>(null);
 
   const [fakeScore, setFakeScore] = useState(0);

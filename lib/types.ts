@@ -10,8 +10,20 @@ export type Game = {
   plays: string;
 };
 
-export type ScoreRow = { rank: number; name: string; score: number; date: string };
+export type ScoreRow = {
+  rank: number;
+  name: string;
+  score: number;
+  date: string;
+};
 
 export type User = { name: string };
 
-export type ScoreEntry = { game: string; score: number; name: string; at: number };
+export type ScoreEntry = {
+  game: string;
+  score: number;
+  name: string;
+  at: number;
+};
+
+export const REAL_SCORE_GAME_IDS = ["asteroides"] as const;
