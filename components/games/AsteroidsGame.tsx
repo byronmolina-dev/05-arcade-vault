@@ -354,11 +354,21 @@ const AsteroidsGame = forwardRef<AsteroidsGameHandle, AsteroidsGameProps>(
       const keys: Record<string, boolean> = {};
       const justPressed: Record<string, boolean> = {};
 
+      const gameKeys = new Set([
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "Space",
+      ]);
+
       const onKeyDown = (e: KeyboardEvent) => {
+        if (gameKeys.has(e.code)) e.preventDefault();
         if (!keys[e.code]) justPressed[e.code] = true;
         keys[e.code] = true;
       };
       const onKeyUp = (e: KeyboardEvent) => {
+        if (gameKeys.has(e.code)) e.preventDefault();
         keys[e.code] = false;
       };
 
