@@ -8,6 +8,9 @@ import { REAL_SCORE_GAME_IDS, type Game } from "@/lib/types";
 import AsteroidsGame, {
   type AsteroidsGameHandle,
 } from "@/components/games/AsteroidsGame";
+import TetrisGame, {
+  type TetrisGameHandle,
+} from "@/components/games/TetrisGame";
 
 const LIVES = 3;
 
@@ -25,11 +28,16 @@ export default function GamePlayerClient({ game }: { game: Game }) {
   const isAsteroids = (REAL_SCORE_GAME_IDS as readonly string[]).includes(
     game.id,
   );
-  const gameRef = useRef<AsteroidsGameHandle>(null);
+  const isTetris = game.id === "tetris";
+  const asteroidsRef = useRef<AsteroidsGameHandle>(null);
+  const tetrisRef = useRef<TetrisGameHandle>(null);
+  const activeHandle = () =>
+    isTetris ? tetrisRef.current : asteroidsRef.current;
 
   const [fakeScore, setFakeScore] = useState(0);
   const [realScore, setRealScore] = useState(0);
   const [realLives, setRealLives] = useState(LIVES);
+  const [realLines, setRealLines] = useState(0);
   const [realLevel, setRealLevel] = useState(1);
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
@@ -54,21 +62,21 @@ export default function GamePlayerClient({ game }: { game: Game }) {
     setPaused((p) => {
       const next = !p;
       if (isAsteroids) {
-        if (next) gameRef.current?.pause();
-        else gameRef.current?.resume();
+        if (next) activeHandle()?.pause();
+        else activeHandle()?.resume();
       }
       return next;
     });
   };
 
   const endGame = () => {
-    if (isAsteroids) gameRef.current?.pause();
+    if (isAsteroids) activeHandle()?.pause();
     setOver(true);
   };
 
   const restart = () => {
     if (isAsteroids) {
-      gameRef.current?.reset();
+      activeHandle()?.reset();
     } else {
       setFakeScore(0);
     }
@@ -105,8 +113,10 @@ export default function GamePlayerClient({ game }: { game: Game }) {
             <div className="v">{score.toLocaleString("es-ES")}</div>
           </div>
           <div className="hud-stat lives">
-            <div className="l">Vidas</div>
-            <div className="v">{"♥ ".repeat(lives).trim() || "—"}</div>
+            <div className="l">{isTetris ? "Líneas" : "Vidas"}</div>
+            <div className="v">
+              {isTetris ? realLines : "♥ ".repeat(lives).trim() || "—"}
+            </div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>
@@ -131,9 +141,17 @@ export default function GamePlayerClient({ game }: { game: Game }) {
 
       <div className="crt">
         <div className="crt-screen">
-          {isAsteroids ? (
+          {isTetris ? (
+            <TetrisGame
+              ref={tetrisRef}
+              onScoreChange={setRealScore}
+              onLinesChange={setRealLines}
+              onLevelChange={setRealLevel}
+              onGameOver={() => setOver(true)}
+            />
+          ) : isAsteroids ? (
             <AsteroidsGame
-              ref={gameRef}
+              ref={asteroidsRef}
               onScoreChange={setRealScore}
               onLivesChange={setRealLives}
               onLevelChange={setRealLevel}

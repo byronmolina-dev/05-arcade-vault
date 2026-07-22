@@ -26,4 +26,4 @@ export type ScoreEntry = {
   at: number;
 };
 
-export const REAL_SCORE_GAME_IDS = ["asteroides"] as const;
+export const REAL_SCORE_GAME_IDS = ["asteroides", "tetris"] as const;
