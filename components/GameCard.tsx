@@ -23,10 +23,16 @@ export default function GameCard({ game }: { game: Game }) {
     el.style.transform = "";
   };
 
-  const goToDetail = () => router.push(`/juegos/${game.id}`);
+  const goToDetail = () => router.push(`/games/${game.id}`);
 
   return (
-    <div ref={tiltRef} className="card" onMouseMove={onMove} onMouseLeave={onLeave} onClick={goToDetail}>
+    <div
+      ref={tiltRef}
+      className="card"
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      onClick={goToDetail}
+    >
       <div className="cover">
         <div className={`cover-bg ${game.cover}`} />
         <div className="label">{game.cat}</div>

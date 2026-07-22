@@ -7,7 +7,7 @@ export default function MiniGameCard({ game }: { game: Game }) {
   const router = useRouter();
 
   return (
-    <div className="mini-card" onClick={() => router.push(`/juegos/${game.id}`)}>
+    <div className="mini-card" onClick={() => router.push(`/games/${game.id}`)}>
       <div className="mini-cover">
         <div className={`cover-bg ${game.cover}`} />
       </div>

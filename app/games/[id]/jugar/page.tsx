@@ -16,7 +16,7 @@ function getServerUserSnapshot() {
   return null;
 }
 
-export default function GamePlayerPage(props: PageProps<"/juegos/[id]/jugar">) {
+export default function GamePlayerPage(props: PageProps<"/games/[id]/jugar">) {
   const { id } = use(props.params);
   const router = useRouter();
   const game = games.find((g) => g.id === id);
@@ -117,7 +117,7 @@ export default function GamePlayerPage(props: PageProps<"/juegos/[id]/jugar">) {
           </button>
           <button
             className="btn ghost"
-            onClick={() => router.push(`/juegos/${game.id}`)}
+            onClick={() => router.push(`/games/${game.id}`)}
           >
             SALIR
           </button>
