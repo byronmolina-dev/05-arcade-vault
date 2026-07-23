@@ -8,6 +8,7 @@ import { REAL_SCORE_GAME_IDS, type Game } from "@/lib/types";
 import AsteroidsGame from "@/components/games/AsteroidsGame";
 import TetrisGame from "@/components/games/TetrisGame";
 import BloqueBusterGame from "@/components/games/BloqueBusterGame";
+import SerpentinaGame from "@/components/games/SerpentinaGame";
 
 const LIVES = 3;
 
@@ -17,17 +18,38 @@ type GameHandle = {
   reset(): void;
 };
 
+type FourthStat =
+  | { kind: "hearts" } // Asteroides, Bloque Buster
+  | { kind: "lines" } // Tetris
+  | { kind: "length" }; // Serpentina — valor numérico, sin corazones
+
 type RealGameConfig = {
-  fourthStatLabel: string;
+  fourthStat: FourthStat;
   suppressExternalPauseOverlay: boolean;
 };
 
+const FOURTH_STAT_LABEL: Record<FourthStat["kind"], string> = {
+  hearts: "Vidas",
+  lines: "Líneas",
+  length: "Longitud",
+};
+
 const REAL_GAME_CONFIG: Partial<Record<string, RealGameConfig>> = {
-  asteroides: { fourthStatLabel: "Vidas", suppressExternalPauseOverlay: false },
-  tetris: { fourthStatLabel: "Líneas", suppressExternalPauseOverlay: false },
+  asteroides: {
+    fourthStat: { kind: "hearts" },
+    suppressExternalPauseOverlay: false,
+  },
+  tetris: {
+    fourthStat: { kind: "lines" },
+    suppressExternalPauseOverlay: false,
+  },
   "bloque-buster": {
-    fourthStatLabel: "Vidas",
+    fourthStat: { kind: "hearts" },
     suppressExternalPauseOverlay: true,
+  },
+  serpentina: {
+    fourthStat: { kind: "length" },
+    suppressExternalPauseOverlay: false,
   },
 };
 
@@ -46,13 +68,15 @@ export default function GamePlayerClient({ game }: { game: Game }) {
     game.id,
   );
   const config = REAL_GAME_CONFIG[game.id];
-  const fourthStatLabel = config?.fourthStatLabel ?? "Vidas";
+  const fourthStatKind = config?.fourthStat.kind ?? "hearts";
+  const fourthStatLabel = FOURTH_STAT_LABEL[fourthStatKind];
   const gameRef = useRef<GameHandle>(null);
 
   const [fakeScore, setFakeScore] = useState(0);
   const [realScore, setRealScore] = useState(0);
   const [realLives, setRealLives] = useState(LIVES);
   const [realLines, setRealLines] = useState(0);
+  const [realLength, setRealLength] = useState(0);
   const [realLevel, setRealLevel] = useState(1);
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
@@ -130,9 +154,11 @@ export default function GamePlayerClient({ game }: { game: Game }) {
           <div className="hud-stat lives">
             <div className="l">{fourthStatLabel}</div>
             <div className="v">
-              {fourthStatLabel === "Líneas"
+              {fourthStatKind === "lines"
                 ? realLines
-                : "♥ ".repeat(lives).trim() || "—"}
+                : fourthStatKind === "length"
+                  ? realLength
+                  : "♥ ".repeat(lives).trim() || "—"}
             </div>
           </div>
           <div className="hud-stat level">
@@ -180,6 +206,14 @@ export default function GamePlayerClient({ game }: { game: Game }) {
               onScoreChange={setRealScore}
               onLivesChange={setRealLives}
               onLevelChange={setRealLevel}
+              onGameOver={() => setOver(true)}
+            />
+          ) : game.id === "serpentina" ? (
+            <SerpentinaGame
+              ref={gameRef}
+              onScoreChange={setRealScore}
+              onLevelChange={setRealLevel}
+              onLengthChange={setRealLength}
               onGameOver={() => setOver(true)}
             />
           ) : (

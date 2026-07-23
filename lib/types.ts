@@ -30,4 +30,5 @@ export const REAL_SCORE_GAME_IDS = [
   "asteroides",
   "tetris",
   "bloque-buster",
+  "serpentina",
 ] as const;
