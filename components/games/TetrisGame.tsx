@@ -1,22 +1,11 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { TETRIS_SKINS, type SkinId } from "@/lib/games/skins";
 
 const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
-
-const COLORS: (string | null)[] = [
-  null,
-  "#4dd0e1", // I - cyan
-  "#ffd54f", // O - yellow
-  "#ba68c8", // T - purple
-  "#81c784", // S - green
-  "#e57373", // Z - red
-  "#90caf9", // J - pale blue
-  "#ffb74d", // L - orange
-  "#9e9e9e", // N - tuerca (gris metálico)
-];
 
 const PIECES: (number[][] | null)[] = [
   null,
@@ -81,6 +70,7 @@ export type TetrisGameProps = {
   onLinesChange: (lines: number) => void;
   onLevelChange: (level: number) => void;
   onGameOver: (finalScore: number) => void;
+  skin?: SkinId;
 };
 
 const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
@@ -262,6 +252,10 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
         spawn();
       }
 
+      function getPalette() {
+        return TETRIS_SKINS[propsRef.current.skin ?? "clasico"];
+      }
+
       function drawBlock(
         context: CanvasRenderingContext2D,
         x: number,
@@ -271,17 +265,18 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
         alpha?: number,
       ) {
         if (!colorIndex) return;
-        const color = COLORS[colorIndex];
+        const palette = getPalette();
+        const color = palette.pieces[colorIndex];
         context.globalAlpha = alpha ?? 1;
         context.fillStyle = color!;
         context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-        context.fillStyle = "rgba(255,255,255,0.12)";
+        context.fillStyle = palette.blockHighlight;
         context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
         context.globalAlpha = 1;
       }
 
       function drawGrid() {
-        ctx!.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx!.strokeStyle = getPalette().grid;
         ctx!.lineWidth = 0.5;
         for (let c = 1; c < COLS; c++) {
           ctx!.beginPath();
@@ -298,17 +293,19 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
       }
 
       function drawPanelStat(label: string, value: string, y: number) {
+        const palette = getPalette();
         ctx!.textAlign = "left";
-        ctx!.fillStyle = "rgba(255,255,255,0.5)";
+        ctx!.fillStyle = palette.hudLabel;
         ctx!.font = "13px monospace";
         ctx!.fillText(label, PANEL_X + PANEL_PADDING, y);
-        ctx!.fillStyle = "#fff";
+        ctx!.fillStyle = palette.hud;
         ctx!.font = "bold 28px monospace";
         ctx!.fillText(value, PANEL_X + PANEL_PADDING, y + 32);
       }
 
       function drawPanel() {
-        ctx!.strokeStyle = "rgba(255,255,255,0.15)";
+        const palette = getPalette();
+        ctx!.strokeStyle = palette.panelLine;
         ctx!.lineWidth = 1;
         ctx!.beginPath();
         ctx!.moveTo(PANEL_X, 0);
@@ -320,14 +317,14 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
         drawPanelStat("LEVEL", String(level), 250);
 
         ctx!.textAlign = "left";
-        ctx!.fillStyle = "rgba(255,255,255,0.5)";
+        ctx!.fillStyle = palette.hudLabel;
         ctx!.font = "13px monospace";
         ctx!.fillText("NEXT", PANEL_X + PANEL_PADDING, 330);
 
         const boxX = PANEL_X + PANEL_PADDING;
         const boxY = 350;
         const boxSize = NEXT_BLOCK * 4;
-        ctx!.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx!.strokeStyle = palette.panelLine;
         ctx!.strokeRect(boxX, boxY, boxSize, boxSize);
 
         const shape = next.shape;
@@ -342,7 +339,8 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
       }
 
       function draw() {
-        ctx!.fillStyle = "#000";
+        const palette = getPalette();
+        ctx!.fillStyle = palette.bg;
         ctx!.fillRect(0, 0, canvas!.width, canvas!.height);
 
         drawGrid();
@@ -364,6 +362,12 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
                 0.2,
               );
 
+        // Glow real solo en la pieza activa (no en toda la grilla) para no
+        // penalizar el framerate. Se activa unicamente en la skin `neon`.
+        if (palette.glow) {
+          ctx!.shadowColor = (palette.pieces[current.type] as string) ?? "#000";
+          ctx!.shadowBlur = 12;
+        }
         for (let r = 0; r < current.shape.length; r++)
           for (let c = 0; c < current.shape[r].length; c++)
             drawBlock(
@@ -373,6 +377,8 @@ const TetrisGame = forwardRef<TetrisGameHandle, TetrisGameProps>(
               current.shape[r][c],
               BLOCK,
             );
+        ctx!.shadowBlur = 0;
+        ctx!.shadowColor = "transparent";
 
         drawPanel();
       }

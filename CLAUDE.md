@@ -16,6 +16,10 @@ Todavía no hay un test runner configurado. Verificación = `npm run build` + `n
 - Usa `/add-game` para implementar, portar o activar un juego del catálogo (placeholder → jugable real). Documenta el estado actual de cada juego, el patrón de componente (`forwardRef` + handle `pause/resume/reset`, callbacks `onScoreChange`/`onGameOver`/...) y cómo integrarlo en `GamePlayerClient`.
 - `/spec` y `/spec-impl` para el flujo de specs (ver abajo).
 
+## Agentes
+
+- **`game-planner`** (`.claude/agents/game-planner.md`): decide qué juego encaja en el catálogo (activar un placeholder existente vs. crear uno nuevo), ponderando balance de categorías, factibilidad técnica, prioridad a placeholders y novedad competible. Mantiene memoria de lo ya sugerido en `references/sugerencias-games-todo.md` (append-only, no repite propuestas) y redacta un borrador de spec en `specs/` (`Status: Draft`) listo para refinar con `/spec`. No implementa código ni toca Supabase — es el paso previo al flujo `/spec` → `/spec-impl` → `add-game`.
+
 ## Arquitectura
 
 - El App Router vive completamente bajo `app/`. `app/layout.tsx` es el layout raíz (fuentes Geist Sans/Mono vía `next/font/google`).
@@ -26,16 +30,16 @@ Todavía no hay un test runner configurado. Verificación = `npm run build` + `n
 
 ## Rutas
 
-| Ruta                | Archivo                | Descripción                                                                                                 |
-| ------------------- | ---------------------- | -------------------------------------                                                                       |
-| `/`                 | `app/page.tsx`         | Home                                                                                                        |
-| `/about`            | `app/about`            | Acerca de                                                                                                   |
-| `/auth`             | `app/auth`             | Login simulado (ver `lib/storage.ts`)                                                                       |
-| `/games`            | `app/games`            | Catálogo de juegos se debe revisar en 'references/implemented-games.md los juegos que estan implementados'  |
-| `/games/[id]`       | `app/games/[id]`       | Detalle de un juego                                                                                         |
-| `/games/[id]/jugar` | `app/games/[id]/jugar` | Reproductor del juego                                                                                       |
-| `/salon`            | `app/salon`            | Salón de puntuaciones (leaderboards)                                                                        |
-| `/api/contact`      | `app/api/contact`      | Envío de email de contacto vía Resend                                                                       |
+| Ruta                | Archivo                | Descripción                                                                                                |
+| ------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `/`                 | `app/page.tsx`         | Home                                                                                                       |
+| `/about`            | `app/about`            | Acerca de                                                                                                  |
+| `/auth`             | `app/auth`             | Login simulado (ver `lib/storage.ts`)                                                                      |
+| `/games`            | `app/games`            | Catálogo de juegos se debe revisar en 'references/implemented-games.md los juegos que estan implementados' |
+| `/games/[id]`       | `app/games/[id]`       | Detalle de un juego                                                                                        |
+| `/games/[id]/jugar` | `app/games/[id]/jugar` | Reproductor del juego                                                                                      |
+| `/salon`            | `app/salon`            | Salón de puntuaciones (leaderboards)                                                                       |
+| `/api/contact`      | `app/api/contact`      | Envío de email de contacto vía Resend                                                                      |
 
 ## Flujo de trabajo: Spec Driven Design
 

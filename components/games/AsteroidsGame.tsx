@@ -1,6 +1,11 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import {
+  ASTEROIDS_SKINS,
+  type AsteroidsPalette,
+  type SkinId,
+} from "@/lib/games/skins";
 
 const W = 800;
 const H = 600;
@@ -44,11 +49,17 @@ class Bullet {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = "#fff";
+  draw(ctx: CanvasRenderingContext2D, palette: AsteroidsPalette) {
+    if (palette.glow) {
+      ctx.shadowColor = palette.bullet;
+      ctx.shadowBlur = 10;
+    }
+    ctx.fillStyle = palette.bullet;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
   }
 }
 
@@ -101,11 +112,11 @@ class Asteroid {
     ];
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, palette: AsteroidsPalette) {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
-    ctx.strokeStyle = "#fff";
+    ctx.strokeStyle = palette.asteroid;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = "round";
     ctx.beginPath();
@@ -143,22 +154,28 @@ class PowerUp {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, palette: AsteroidsPalette) {
     if (this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0) return;
     const pulse = 0.85 + Math.sin(performance.now() / 150) * 0.15;
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(Math.PI / 4);
-    ctx.strokeStyle = "#0ff";
+    if (palette.glow) {
+      ctx.shadowColor = palette.powerup;
+      ctx.shadowBlur = 12;
+    }
+    ctx.strokeStyle = palette.powerup;
     ctx.lineWidth = 2;
     const r = this.radius * pulse;
     ctx.strokeRect(-r, -r, r * 2, r * 2);
     ctx.restore();
-    ctx.fillStyle = "#0ff";
+    ctx.fillStyle = palette.powerup;
     ctx.font = "bold 12px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("3x", this.x, this.y);
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
   }
 }
 
@@ -232,7 +249,7 @@ class Ship {
     return [new Bullet(ox, oy, this.angle)];
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, palette: AsteroidsPalette) {
     if (this.dead) return;
     // Parpadeo durante invencibilidad de reaparición
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0)
@@ -241,7 +258,11 @@ class Ship {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = "#fff";
+    if (palette.glow) {
+      ctx.shadowColor = palette.ship;
+      ctx.shadowBlur = 12;
+    }
+    ctx.strokeStyle = palette.ship;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = "round";
 
@@ -260,7 +281,7 @@ class Ship {
       ctx.moveTo(-8, -4);
       ctx.lineTo(-8 - rand(6, 14), 0);
       ctx.lineTo(-8, 4);
-      ctx.strokeStyle = "rgba(255, 130, 0, 0.85)";
+      ctx.strokeStyle = palette.thrust;
       ctx.stroke();
     }
 
@@ -295,9 +316,9 @@ class Particle {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, palette: AsteroidsPalette) {
     const alpha = this.ttl / this.life;
-    ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+    ctx.strokeStyle = `rgba(${palette.particle},${alpha.toFixed(2)})`;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
@@ -319,6 +340,7 @@ export type AsteroidsGameProps = {
   onLivesChange: (lives: number) => void;
   onLevelChange: (level: number) => void;
   onGameOver: (finalScore: number) => void;
+  skin?: SkinId;
 };
 
 const AsteroidsGame = forwardRef<AsteroidsGameHandle, AsteroidsGameProps>(
@@ -542,11 +564,15 @@ const AsteroidsGame = forwardRef<AsteroidsGameHandle, AsteroidsGameProps>(
         if (asteroids.length === 0) nextLevel();
       }
 
+      function getPalette(): AsteroidsPalette {
+        return ASTEROIDS_SKINS[propsRef.current.skin ?? "clasico"];
+      }
+
       function drawLifeIcon(x: number, y: number) {
         ctx!.save();
         ctx!.translate(x, y);
         ctx!.rotate(-Math.PI / 2);
-        ctx!.strokeStyle = "#fff";
+        ctx!.strokeStyle = getPalette().hud;
         ctx!.lineWidth = 1.2;
         ctx!.lineJoin = "round";
         ctx!.beginPath();
@@ -560,7 +586,8 @@ const AsteroidsGame = forwardRef<AsteroidsGameHandle, AsteroidsGameProps>(
       }
 
       function drawHUD() {
-        ctx!.fillStyle = "#fff";
+        const palette = getPalette();
+        ctx!.fillStyle = palette.hud;
         ctx!.font = "15px monospace";
 
         ctx!.textAlign = "left";
@@ -573,20 +600,21 @@ const AsteroidsGame = forwardRef<AsteroidsGameHandle, AsteroidsGameProps>(
 
         if (ship.tripleShot > 0) {
           ctx!.textAlign = "left";
-          ctx!.fillStyle = "#0ff";
+          ctx!.fillStyle = palette.hudAccent;
           ctx!.fillText(`3x  ${ship.tripleShot.toFixed(1)}s`, 14, 46);
         }
       }
 
       function draw() {
-        ctx!.fillStyle = "#000";
+        const palette = getPalette();
+        ctx!.fillStyle = palette.bg;
         ctx!.fillRect(0, 0, W, H);
 
-        particles.forEach((p) => p.draw(ctx!));
-        asteroids.forEach((a) => a.draw(ctx!));
-        powerUps.forEach((p) => p.draw(ctx!));
-        bullets.forEach((b) => b.draw(ctx!));
-        ship.draw(ctx!);
+        particles.forEach((p) => p.draw(ctx!, palette));
+        asteroids.forEach((a) => a.draw(ctx!, palette));
+        powerUps.forEach((p) => p.draw(ctx!, palette));
+        bullets.forEach((b) => b.draw(ctx!, palette));
+        ship.draw(ctx!, palette);
 
         drawHUD();
       }

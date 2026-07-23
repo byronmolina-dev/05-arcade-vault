@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { getUser, pushScore, subscribeToUser } from "@/lib/storage";
 import { insertScore } from "@/lib/supabase/scoresClient";
 import { REAL_SCORE_GAME_IDS, type Game } from "@/lib/types";
+import {
+  SKINNED_GAME_IDS,
+  SKIN_IDS,
+  SKIN_LABELS,
+  type SkinId,
+} from "@/lib/games/skins";
 import AsteroidsGame from "@/components/games/AsteroidsGame";
 import TetrisGame from "@/components/games/TetrisGame";
 import BloqueBusterGame from "@/components/games/BloqueBusterGame";
@@ -82,6 +88,32 @@ export default function GamePlayerClient({ game }: { game: Game }) {
   const [over, setOver] = useState(false);
   const [saved, setSaved] = useState(false);
   const [nameOverride, setNameOverride] = useState<string | null>(null);
+
+  const hasSkins = SKINNED_GAME_IDS.includes(game.id);
+  const [skin, setSkin] = useState<SkinId>("clasico");
+
+  // Cargar la skin persistida tras montar (evita mismatch de hidratacion:
+  // localStorage no existe en SSR). Patron try/catch silencioso de lib/storage.
+  useEffect(() => {
+    if (!hasSkins) return;
+    try {
+      const raw = localStorage.getItem(`av_skin_${game.id}`);
+      if (raw && (SKIN_IDS as string[]).includes(raw)) {
+        setSkin(raw as SkinId);
+      }
+    } catch {
+      // localStorage no disponible (modo privado, cuota): sin cambio, queda clasico
+    }
+  }, [game.id, hasSkins]);
+
+  const selectSkin = (next: SkinId) => {
+    setSkin(next);
+    try {
+      localStorage.setItem(`av_skin_${game.id}`, next);
+    } catch {
+      // localStorage no disponible: la eleccion vive solo en memoria esta sesion
+    }
+  };
 
   const score = isRealGame ? realScore : fakeScore;
   const lives = isRealGame ? realLives : LIVES;
@@ -167,6 +199,37 @@ export default function GamePlayerClient({ game }: { game: Game }) {
           </div>
         </div>
         <div className="hud-actions">
+          {hasSkins && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginRight: 4,
+              }}
+            >
+              <span
+                className="pixel"
+                style={{
+                  fontSize: 8,
+                  letterSpacing: "0.14em",
+                  color: "var(--ink-faint)",
+                }}
+              >
+                SKIN
+              </span>
+              {SKIN_IDS.map((id) => (
+                <button
+                  key={id}
+                  className={`btn ${skin === id ? "yellow" : "ghost"}`}
+                  style={{ padding: "8px 10px", fontSize: 8 }}
+                  onClick={() => selectSkin(id)}
+                >
+                  {SKIN_LABELS[id]}
+                </button>
+              ))}
+            </div>
+          )}
           <button className="btn yellow" onClick={togglePause}>
             {paused ? "REANUDAR" : "PAUSA"}
           </button>
@@ -191,6 +254,7 @@ export default function GamePlayerClient({ game }: { game: Game }) {
               onLinesChange={setRealLines}
               onLevelChange={setRealLevel}
               onGameOver={() => setOver(true)}
+              skin={skin}
             />
           ) : game.id === "asteroides" ? (
             <AsteroidsGame
@@ -199,6 +263,7 @@ export default function GamePlayerClient({ game }: { game: Game }) {
               onLivesChange={setRealLives}
               onLevelChange={setRealLevel}
               onGameOver={() => setOver(true)}
+              skin={skin}
             />
           ) : game.id === "bloque-buster" ? (
             <BloqueBusterGame
