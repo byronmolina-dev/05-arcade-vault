@@ -5,14 +5,31 @@ import { useRouter } from "next/navigation";
 import { getUser, pushScore, subscribeToUser } from "@/lib/storage";
 import { insertScore } from "@/lib/supabase/scoresClient";
 import { REAL_SCORE_GAME_IDS, type Game } from "@/lib/types";
-import AsteroidsGame, {
-  type AsteroidsGameHandle,
-} from "@/components/games/AsteroidsGame";
-import TetrisGame, {
-  type TetrisGameHandle,
-} from "@/components/games/TetrisGame";
+import AsteroidsGame from "@/components/games/AsteroidsGame";
+import TetrisGame from "@/components/games/TetrisGame";
+import BloqueBusterGame from "@/components/games/BloqueBusterGame";
 
 const LIVES = 3;
+
+type GameHandle = {
+  pause(): void;
+  resume(): void;
+  reset(): void;
+};
+
+type RealGameConfig = {
+  fourthStatLabel: string;
+  suppressExternalPauseOverlay: boolean;
+};
+
+const REAL_GAME_CONFIG: Partial<Record<string, RealGameConfig>> = {
+  asteroides: { fourthStatLabel: "Vidas", suppressExternalPauseOverlay: false },
+  tetris: { fourthStatLabel: "Líneas", suppressExternalPauseOverlay: false },
+  "bloque-buster": {
+    fourthStatLabel: "Vidas",
+    suppressExternalPauseOverlay: true,
+  },
+};
 
 function getServerUserSnapshot() {
   return null;
@@ -25,14 +42,12 @@ export default function GamePlayerClient({ game }: { game: Game }) {
     getUser,
     getServerUserSnapshot,
   );
-  const isAsteroids = (REAL_SCORE_GAME_IDS as readonly string[]).includes(
+  const isRealGame = (REAL_SCORE_GAME_IDS as readonly string[]).includes(
     game.id,
   );
-  const isTetris = game.id === "tetris";
-  const asteroidsRef = useRef<AsteroidsGameHandle>(null);
-  const tetrisRef = useRef<TetrisGameHandle>(null);
-  const activeHandle = () =>
-    isTetris ? tetrisRef.current : asteroidsRef.current;
+  const config = REAL_GAME_CONFIG[game.id];
+  const fourthStatLabel = config?.fourthStatLabel ?? "Vidas";
+  const gameRef = useRef<GameHandle>(null);
 
   const [fakeScore, setFakeScore] = useState(0);
   const [realScore, setRealScore] = useState(0);
@@ -44,39 +59,39 @@ export default function GamePlayerClient({ game }: { game: Game }) {
   const [saved, setSaved] = useState(false);
   const [nameOverride, setNameOverride] = useState<string | null>(null);
 
-  const score = isAsteroids ? realScore : fakeScore;
-  const lives = isAsteroids ? realLives : LIVES;
-  const level = isAsteroids ? realLevel : Math.floor(score / 2500) + 1;
+  const score = isRealGame ? realScore : fakeScore;
+  const lives = isRealGame ? realLives : LIVES;
+  const level = isRealGame ? realLevel : Math.floor(score / 2500) + 1;
   const name = nameOverride ?? user?.name ?? "INVITADO";
 
   useEffect(() => {
-    if (isAsteroids || over || paused) return;
+    if (isRealGame || over || paused) return;
     const t = setInterval(
       () => setFakeScore((s) => s + Math.floor(10 + Math.random() * 90)),
       220,
     );
     return () => clearInterval(t);
-  }, [isAsteroids, over, paused]);
+  }, [isRealGame, over, paused]);
 
   const togglePause = () => {
     setPaused((p) => {
       const next = !p;
-      if (isAsteroids) {
-        if (next) activeHandle()?.pause();
-        else activeHandle()?.resume();
+      if (isRealGame) {
+        if (next) gameRef.current?.pause();
+        else gameRef.current?.resume();
       }
       return next;
     });
   };
 
   const endGame = () => {
-    if (isAsteroids) activeHandle()?.pause();
+    if (isRealGame) gameRef.current?.pause();
     setOver(true);
   };
 
   const restart = () => {
-    if (isAsteroids) {
-      activeHandle()?.reset();
+    if (isRealGame) {
+      gameRef.current?.reset();
     } else {
       setFakeScore(0);
     }
@@ -86,7 +101,7 @@ export default function GamePlayerClient({ game }: { game: Game }) {
   };
 
   const handleSaveScore = async () => {
-    if (isAsteroids) {
+    if (isRealGame) {
       try {
         await insertScore({ gameId: game.id, name, score });
       } catch {
@@ -113,9 +128,11 @@ export default function GamePlayerClient({ game }: { game: Game }) {
             <div className="v">{score.toLocaleString("es-ES")}</div>
           </div>
           <div className="hud-stat lives">
-            <div className="l">{isTetris ? "Líneas" : "Vidas"}</div>
+            <div className="l">{fourthStatLabel}</div>
             <div className="v">
-              {isTetris ? realLines : "♥ ".repeat(lives).trim() || "—"}
+              {fourthStatLabel === "Líneas"
+                ? realLines
+                : "♥ ".repeat(lives).trim() || "—"}
             </div>
           </div>
           <div className="hud-stat level">
@@ -141,17 +158,25 @@ export default function GamePlayerClient({ game }: { game: Game }) {
 
       <div className="crt">
         <div className="crt-screen">
-          {isTetris ? (
+          {game.id === "tetris" ? (
             <TetrisGame
-              ref={tetrisRef}
+              ref={gameRef}
               onScoreChange={setRealScore}
               onLinesChange={setRealLines}
               onLevelChange={setRealLevel}
               onGameOver={() => setOver(true)}
             />
-          ) : isAsteroids ? (
+          ) : game.id === "asteroides" ? (
             <AsteroidsGame
-              ref={asteroidsRef}
+              ref={gameRef}
+              onScoreChange={setRealScore}
+              onLivesChange={setRealLives}
+              onLevelChange={setRealLevel}
+              onGameOver={() => setOver(true)}
+            />
+          ) : game.id === "bloque-buster" ? (
+            <BloqueBusterGame
+              ref={gameRef}
               onScoreChange={setRealScore}
               onLivesChange={setRealLives}
               onLevelChange={setRealLevel}
@@ -166,7 +191,7 @@ export default function GamePlayerClient({ game }: { game: Game }) {
               <div className="player-ship" />
             </div>
           )}
-          {paused && (
+          {paused && !config?.suppressExternalPauseOverlay && (
             <div
               className="crt-content"
               style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
