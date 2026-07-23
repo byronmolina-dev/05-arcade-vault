@@ -1059,7 +1059,9 @@ a {
 }
 .crt-screen {
   position: relative;
+  width: min(100%, calc((100dvh - 340px) * 4 / 3));
   aspect-ratio: 4 / 3;
+  margin: 0 auto;
   background: #000;
   border-radius: 12px / 28px;
   overflow: hidden;
