@@ -1185,6 +1185,204 @@ a {
   background: rgba(0, 245, 255, 0.25);
 }
 
+/* Variante "gamepad" (Tetris): panel unico D-pad + botones A/B, inspirado
+   en references/gamepad-assets/gamepad.html. Reusa --cyan/--magenta y
+   @keyframes pulse-led ya definidos en el tema. A diferencia de la
+   variante clasica (overlay absoluto sobre .crt-screen), este panel vive
+   en el flujo normal del documento, debajo de .crt-screen (no tapa la
+   partida) y con un ancho acotado para que no se estire de borde a
+   borde en telefonos angostos. */
+.touch-gamepad-dock {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+.touch-gamepad-dock .gp {
+  width: 100%;
+  max-width: 300px;
+  padding: 8px 14px;
+  background: linear-gradient(180deg, #1c1c28 0%, #0c0c14 100%);
+  border: 1px solid rgba(0, 245, 255, 0.18);
+  border-radius: 16px;
+  box-shadow:
+    0 16px 40px -18px rgba(0, 245, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6);
+}
+.gp-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* D-pad */
+.gp-dpad {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  flex: 0 0 auto;
+}
+.dp {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(180deg, #1a1a25, #0a0a12);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  color: var(--ink-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow:
+    0 3px 0 #050507,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+}
+.dp-arrow {
+  width: 16px;
+  height: 16px;
+}
+.dp-up {
+  top: 0;
+  left: 29px;
+}
+.dp-down {
+  bottom: 0;
+  left: 29px;
+}
+.dp-left {
+  left: 0;
+  top: 29px;
+}
+.dp-right {
+  right: 0;
+  top: 29px;
+}
+.dp:active {
+  transform: translateY(2px);
+  color: var(--cyan);
+  background: linear-gradient(180deg, #08161e, #030a0e);
+  border-color: var(--cyan);
+  box-shadow:
+    0 1px 0 #050507,
+    inset 0 0 12px rgba(0, 245, 255, 0.45),
+    0 0 12px rgba(0, 245, 255, 0.5);
+}
+.dp:active .dp-arrow {
+  filter: drop-shadow(0 0 4px var(--cyan)) drop-shadow(0 0 8px var(--cyan));
+}
+.dp-hub {
+  position: absolute;
+  top: 29px;
+  left: 29px;
+  width: 34px;
+  height: 34px;
+  background: radial-gradient(circle at 50% 50%, #181822 0%, #08080d 80%);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+}
+.dp-hub-gem {
+  width: 8px;
+  height: 8px;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: pulse-led 2s ease-in-out infinite;
+}
+
+/* A/B */
+.gp-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.ab {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  padding: 0;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(
+      circle at 32% 26%,
+      rgba(255, 255, 255, 0.25),
+      transparent 50%
+    ),
+    radial-gradient(circle at 50% 55%, var(--ab-mid), var(--ab-deep) 75%);
+  box-shadow:
+    0 5px 0 #050507,
+    0 0 18px var(--ab-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4);
+}
+.ab.a {
+  color: var(--magenta);
+  --ab-mid: rgba(255, 0, 110, 0.7);
+  --ab-deep: rgba(110, 0, 40, 0.95);
+  --ab-glow: rgba(255, 0, 110, 0.4);
+}
+.ab.b {
+  color: var(--cyan);
+  --ab-mid: rgba(0, 200, 230, 0.7);
+  --ab-deep: rgba(0, 50, 70, 0.95);
+  --ab-glow: rgba(0, 245, 255, 0.4);
+}
+.ab-icon {
+  font-size: 18px;
+  color: #fff;
+  text-shadow:
+    0 0 8px currentColor,
+    0 0 18px currentColor;
+  position: relative;
+  z-index: 2;
+}
+.ab.a .ab-icon {
+  text-shadow:
+    0 0 8px var(--magenta),
+    0 0 18px var(--magenta);
+}
+.ab.b .ab-icon {
+  text-shadow:
+    0 0 8px var(--cyan),
+    0 0 18px var(--cyan);
+}
+.ab-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px dashed currentColor;
+  opacity: 0;
+}
+.ab:active {
+  transform: translateY(3px) scale(0.97);
+  box-shadow:
+    0 1px 0 #050507,
+    0 0 28px var(--ab-glow),
+    inset 0 0 14px rgba(0, 0, 0, 0.5);
+}
+.ab:active .ab-ring {
+  opacity: 1;
+}
+
 /* Telefono en horizontal: la altura del viewport es lo escaso (no el
    ancho), asi que se recorta toda la "chrome" alrededor de .crt-screen
    (nav, footer, hud, padding decorativo) para dejarle a la pantalla el

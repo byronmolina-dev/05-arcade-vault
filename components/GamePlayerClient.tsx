@@ -16,6 +16,7 @@ import TetrisGame from "@/components/games/TetrisGame";
 import BloqueBusterGame from "@/components/games/BloqueBusterGame";
 import SerpentinaGame from "@/components/games/SerpentinaGame";
 import TouchControls from "@/components/games/TouchControls";
+import { TOUCH_CONTROLS_CONFIG } from "@/lib/games/touchControls";
 
 const LIVES = 3;
 
@@ -86,6 +87,11 @@ export default function GamePlayerClient({ game }: { game: Game }) {
   const isRealGame = (REAL_SCORE_GAME_IDS as readonly string[]).includes(
     game.id,
   );
+  // Tetris usa la variante "gamepad" (ver lib/games/touchControls.ts): a
+  // diferencia del overlay clasico de los otros juegos reales, ese panel
+  // se monta debajo de .crt-screen (no tapa la partida), no dentro.
+  const isGamepadVariant =
+    TOUCH_CONTROLS_CONFIG[game.id]?.variant === "gamepad";
   const config = REAL_GAME_CONFIG[game.id];
   const fourthStatKind = config?.fourthStat.kind ?? "hearts";
   const fourthStatLabel = FOURTH_STAT_LABEL[fourthStatKind];
@@ -397,8 +403,11 @@ export default function GamePlayerClient({ game }: { game: Game }) {
               </div>
             </div>
           )}
-          {isRealGame && <TouchControls gameId={game.id} />}
+          {isRealGame && !isGamepadVariant && (
+            <TouchControls gameId={game.id} />
+          )}
         </div>
+        {isRealGame && isGamepadVariant && <TouchControls gameId={game.id} />}
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
           <span>{game.title} · CRT-83 · 60 HZ</span>
