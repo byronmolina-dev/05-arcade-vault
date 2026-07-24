@@ -15,6 +15,7 @@ import AsteroidsGame from "@/components/games/AsteroidsGame";
 import TetrisGame from "@/components/games/TetrisGame";
 import BloqueBusterGame from "@/components/games/BloqueBusterGame";
 import SerpentinaGame from "@/components/games/SerpentinaGame";
+import TouchControls from "@/components/games/TouchControls";
 
 const LIVES = 3;
 
@@ -32,6 +33,14 @@ type FourthStat =
 type RealGameConfig = {
   fourthStat: FourthStat;
   suppressExternalPauseOverlay: boolean;
+  // true = exige horizontal en tactil (aviso "GIRA TU DISPOSITIVO" + pausa
+  // automatica); false = se deja jugar en vertical, sin aviso ni pausa.
+  // Excepcion temporal: asteroides ya es jugable en vertical (el
+  // .crt-screen 4/3 entra completo en una pantalla de telefono en
+  // portrait), mientras se investiga por que el layout compacto de
+  // landscape no reduce lo suficiente la chrome alrededor en dispositivos
+  // reales.
+  blockPortrait: boolean;
 };
 
 const FOURTH_STAT_LABEL: Record<FourthStat["kind"], string> = {
@@ -44,18 +53,22 @@ const REAL_GAME_CONFIG: Partial<Record<string, RealGameConfig>> = {
   asteroides: {
     fourthStat: { kind: "hearts" },
     suppressExternalPauseOverlay: false,
+    blockPortrait: false,
   },
   tetris: {
     fourthStat: { kind: "lines" },
     suppressExternalPauseOverlay: false,
+    blockPortrait: false,
   },
   "bloque-buster": {
     fourthStat: { kind: "hearts" },
     suppressExternalPauseOverlay: true,
+    blockPortrait: false,
   },
   serpentina: {
     fourthStat: { kind: "length" },
     suppressExternalPauseOverlay: false,
+    blockPortrait: false,
   },
 };
 
@@ -91,6 +104,54 @@ export default function GamePlayerClient({ game }: { game: Game }) {
 
   const hasSkins = SKINNED_GAME_IDS.includes(game.id);
   const [skin, setSkin] = useState<SkinId>("clasico");
+
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [orientationBlocked, setOrientationBlocked] = useState(false);
+  const pausedRef = useRef(paused);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
+
+  // Deteccion tras montar (evita mismatch de hidratacion). Mismo patron
+  // que TouchControls y que la carga de skin persistida mas abajo.
+  useEffect(() => {
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const touch = "ontouchstart" in window;
+    setIsTouchDevice(coarse || touch);
+  }, []);
+
+  // Clase en <body> (en vez de CSS :has(), mas confiable entre navegadores)
+  // que habilita el layout compacto de landscape movil en app/globals.css
+  // solo para los 4 juegos reales en dispositivo tactil.
+  useEffect(() => {
+    if (!isRealGame || !isTouchDevice) return;
+    document.body.classList.add("av-touch-player");
+    return () => document.body.classList.remove("av-touch-player");
+  }, [isRealGame, isTouchDevice]);
+
+  // Aviso "GIRA TU DISPOSITIVO": solo para los juegos reales en tactil que
+  // requieren horizontal (config.blockPortrait). orientationBlocked es
+  // independiente del `paused` manual (no togglea el boton visible
+  // PAUSA/REANUDAR): al bloquear pausa el juego real; al desbloquear,
+  // reanuda solo si el jugador no habia pausado manualmente.
+  useEffect(() => {
+    if (!isRealGame || !isTouchDevice || !config?.blockPortrait) return;
+    const mq = window.matchMedia("(orientation: portrait)");
+    const applyOrientation = (portrait: boolean) => {
+      setOrientationBlocked(portrait);
+      if (portrait) {
+        gameRef.current?.pause();
+      } else if (!pausedRef.current) {
+        gameRef.current?.resume();
+      }
+    };
+    applyOrientation(mq.matches);
+    const handleChange = (e: MediaQueryListEvent) =>
+      applyOrientation(e.matches);
+    mq.addEventListener("change", handleChange);
+    return () => mq.removeEventListener("change", handleChange);
+  }, [isRealGame, isTouchDevice, config?.blockPortrait]);
 
   // Cargar la skin persistida tras montar (evita mismatch de hidratacion:
   // localStorage no existe en SSR). Patron try/catch silencioso de lib/storage.
@@ -313,6 +374,30 @@ export default function GamePlayerClient({ game }: { game: Game }) {
               </div>
             </div>
           )}
+          {isRealGame && orientationBlocked && (
+            <div
+              className="crt-content"
+              style={{ background: "rgba(0,0,0,0.85)", zIndex: 8 }}
+            >
+              <div>
+                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
+                  GIRÁ TU DISPOSITIVO
+                </div>
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: 11,
+                    color: "var(--ink-dim)",
+                    marginTop: 10,
+                    letterSpacing: "0.16em",
+                  }}
+                >
+                  JUGÁ EN HORIZONTAL PARA CONTINUAR
+                </div>
+              </div>
+            </div>
+          )}
+          {isRealGame && <TouchControls gameId={game.id} />}
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
