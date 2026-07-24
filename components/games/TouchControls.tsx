@@ -23,5 +23,34 @@ export default function TouchControls({ gameId }: TouchControlsProps) {
 
   if (!config || !isTouchDevice) return null;
 
-  return null;
+  return (
+    <div className="touch-controls">
+      <div className="touch-dpad">
+        {config.dpad.map((btn) => (
+          <button
+            key={btn.code}
+            type="button"
+            className="touch-btn"
+            aria-label={btn.label}
+          >
+            {btn.label}
+          </button>
+        ))}
+      </div>
+      {config.actions.length > 0 && (
+        <div className="touch-actions">
+          {config.actions.map((btn) => (
+            <button
+              key={btn.code}
+              type="button"
+              className="touch-btn"
+              aria-label={btn.label}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

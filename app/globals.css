@@ -1128,6 +1128,61 @@ a {
   box-shadow: 0 0 6px var(--green);
 }
 
+/* ===== touch controls (mobile) ===== */
+.touch-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+.touch-dpad,
+.touch-actions {
+  position: absolute;
+  bottom: 14px;
+  display: grid;
+  gap: 8px;
+  pointer-events: auto;
+}
+.touch-dpad {
+  left: 14px;
+  grid-auto-flow: column;
+}
+.touch-actions {
+  right: 14px;
+  grid-auto-flow: column;
+}
+.touch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  min-height: 52px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 245, 255, 0.35);
+  background: rgba(5, 5, 10, 0.55);
+  color: var(--cyan);
+  font-family: var(--pixel);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.touch-btn:active {
+  background: rgba(0, 245, 255, 0.25);
+}
+.touch-orientation {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  text-align: center;
+}
+
 /* fake in-screen game */
 .game-arena {
   position: absolute;
