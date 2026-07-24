@@ -22,6 +22,12 @@ export type TouchButtonConfig = {
 export type TouchControlsConfig = {
   dpad: TouchButtonConfig[]; // 2 a 4 botones, cluster abajo-izquierda
   actions: TouchButtonConfig[]; // 0 a 2 botones, cluster abajo-derecha
+  // "classic" (default si se omite) = los dos clusters flotantes originales
+  // de esta spec. "gamepad" = el mismo dpad/actions pero renderizados como
+  // un panel unico estilo control (D-pad + botones A/B circulares), ver
+  // TouchControls.tsx. Reusa exactamente los mismos TouchButtonConfig — solo
+  // cambia la presentacion visual, no el mapeo de teclas ni el auto-repeat.
+  variant?: "classic" | "gamepad";
 };
 
 export const TOUCH_REPEAT_MS = 120;
@@ -49,6 +55,7 @@ export const TOUCH_CONTROLS_CONFIG: Partial<
       { code: "ArrowUp", label: "ROTAR", discrete: true },
       { code: "Space", label: "CAER", discrete: true },
     ],
+    variant: "gamepad",
   },
   "bloque-buster": {
     dpad: [
