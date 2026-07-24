@@ -1,6 +1,6 @@
 # SPEC 23 — Controles táctiles móviles
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 05 (Asteroides — patrón `keys[code]` continuo), SPEC 06 (Leaderboard y catálogo de juegos reales), SPEC 07 (Tetris — patrón `keydown` discreto), SPEC 08 (Bloque Buster — patrón `GameHandle`/`REAL_GAME_CONFIG` en `GamePlayerClient`), SPEC 09 (Serpentina — generalización del HUD en `GamePlayerClient`)
 > **Date:** 2026-07-24
 > **Objective:** Agregar un overlay de controles táctiles (D-pad + botones de acción, configurado por juego) en la pantalla `/games/[id]/jugar`, para que los 4 juegos reales (`asteroides`, `tetris`, `bloque-buster`, `serpentina`) sean jugables por completo en un teléfono táctil sin teclado.
@@ -163,7 +163,7 @@ Convenciones:
 - [x] En un dispositivo/emulador táctil, `/games/tetris/jugar` muestra un D-pad (◄ ► ▼) y botones de acción (ROTAR, CAER). Verificado en teléfono real.
 - [x] En un dispositivo/emulador táctil, `/games/bloque-buster/jugar` muestra un D-pad (◄ ►) sin cluster de acciones. Verificado en teléfono real.
 - [x] En un dispositivo/emulador táctil, `/games/serpentina/jugar` muestra un D-pad de 4 direcciones sin cluster de acciones. Verificado en teléfono real.
-- [ ] En desktop con mouse (sin touch), ninguno de los 4 juegos reales muestra botones táctiles. _(Pendiente de verificación manual en desktop; el resto de la spec se verificó en teléfono real.)_
+- [x] En desktop con mouse (sin touch), ninguno de los 4 juegos reales muestra botones táctiles. Verificado en desktop.
 - [x] Sostener un botón `discrete: false` (p. ej. PROPULSAR en Asteroides) mantiene la acción activa mientras se sostiene, igual que sostener la tecla física. Verificado en teléfono real.
 - [x] Sostener un botón `discrete: true` (p. ej. ◄ en Tetris/Serpentina) repite el movimiento cada `TOUCH_REPEAT_MS` mientras se sostiene, sin necesidad de tocar repetidamente. Verificado en teléfono real.
 - [x] Soltar cualquier botón táctil (`pointerup`, `pointercancel` o `pointerleave`) detiene la acción correspondiente sin dejarla "trabada". Verificado en teléfono real.
