@@ -1032,6 +1032,7 @@ a {
 }
 .hud-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -1105,8 +1106,10 @@ a {
 }
 .crt-bottom {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 4px 10px;
   margin-top: 14px;
   padding: 0 8px;
   font-family: var(--pixel);
@@ -1138,39 +1141,94 @@ a {
 .touch-dpad,
 .touch-actions {
   position: absolute;
-  bottom: 14px;
-  display: grid;
-  gap: 8px;
+  bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 46%;
+  gap: 6px;
   pointer-events: auto;
 }
 .touch-dpad {
-  left: 14px;
-  grid-auto-flow: column;
+  left: 10px;
+  justify-content: flex-start;
 }
 .touch-actions {
-  right: 14px;
-  grid-auto-flow: column;
+  right: 10px;
+  justify-content: flex-end;
+}
+.touch-dpad--wide {
+  max-width: 92%;
 }
 .touch-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 52px;
-  min-height: 52px;
-  padding: 6px 10px;
+  flex: 0 0 auto;
+  min-width: 46px;
+  min-height: 46px;
+  padding: 6px 8px;
   border-radius: 10px;
   border: 1px solid rgba(0, 245, 255, 0.35);
   background: rgba(5, 5, 10, 0.55);
   color: var(--cyan);
   font-family: var(--pixel);
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 8px;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-align: center;
+  overflow-wrap: break-word;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
 .touch-btn:active {
   background: rgba(0, 245, 255, 0.25);
+}
+
+/* Telefono en horizontal: la altura del viewport es lo escaso (no el
+   ancho), asi que se recorta toda la "chrome" alrededor de .crt-screen
+   (nav, footer, hud, padding decorativo) para dejarle a la pantalla el
+   maximo de alto disponible. No se toca el aspect-ratio 4/3 de
+   .crt-screen ni la resolucion interna del canvas de ningun juego.
+   body.av-touch-player la togglea GamePlayerClient (no se usa :has()
+   por compatibilidad). */
+@media (orientation: landscape) and (max-height: 600px) and (pointer: coarse) {
+  body.av-touch-player nav.av-nav,
+  body.av-touch-player footer {
+    display: none;
+  }
+  .av-player {
+    margin: 4px auto;
+    padding: 0 8px 6px;
+  }
+  .player-hud {
+    padding: 4px 10px;
+    margin-bottom: 4px;
+    gap: 6px 16px;
+  }
+  .hud-stat .l {
+    font-size: 8px;
+  }
+  .hud-stat .v {
+    font-size: 12px;
+  }
+  .hud-actions {
+    gap: 6px;
+  }
+  .player-hud .btn {
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+  .crt {
+    padding: 6px;
+    border-radius: 14px;
+  }
+  .crt-screen {
+    width: min(100%, calc((100dvh - 90px) * 4 / 3));
+  }
+  .crt-bottom {
+    display: none;
+  }
 }
 
 /* fake in-screen game */

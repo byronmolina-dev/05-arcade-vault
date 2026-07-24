@@ -15,9 +15,9 @@ const FRUITS_SRC = "/games/serpentina/fruits.png";
 const COLS = 20;
 const ROWS = 15;
 const FRUITS_PER_LEVEL = 5;
-const BASE_TICK_MS = 160;
+const BASE_TICK_MS = 190;
 const TICK_DECREASE_PER_LEVEL = 12;
-const MIN_TICK_MS = 60;
+const MIN_TICK_MS = 80;
 
 // Subconjunto curado del atlas (references/source-assets/snake-assets/sprites.js)
 const FRUIT_ATLAS = {

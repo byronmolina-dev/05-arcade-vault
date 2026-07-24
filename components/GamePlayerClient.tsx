@@ -33,6 +33,14 @@ type FourthStat =
 type RealGameConfig = {
   fourthStat: FourthStat;
   suppressExternalPauseOverlay: boolean;
+  // true = exige horizontal en tactil (aviso "GIRA TU DISPOSITIVO" + pausa
+  // automatica); false = se deja jugar en vertical, sin aviso ni pausa.
+  // Excepcion temporal: asteroides ya es jugable en vertical (el
+  // .crt-screen 4/3 entra completo en una pantalla de telefono en
+  // portrait), mientras se investiga por que el layout compacto de
+  // landscape no reduce lo suficiente la chrome alrededor en dispositivos
+  // reales.
+  blockPortrait: boolean;
 };
 
 const FOURTH_STAT_LABEL: Record<FourthStat["kind"], string> = {
@@ -45,18 +53,22 @@ const REAL_GAME_CONFIG: Partial<Record<string, RealGameConfig>> = {
   asteroides: {
     fourthStat: { kind: "hearts" },
     suppressExternalPauseOverlay: false,
+    blockPortrait: false,
   },
   tetris: {
     fourthStat: { kind: "lines" },
     suppressExternalPauseOverlay: false,
+    blockPortrait: false,
   },
   "bloque-buster": {
     fourthStat: { kind: "hearts" },
     suppressExternalPauseOverlay: true,
+    blockPortrait: false,
   },
   serpentina: {
     fourthStat: { kind: "length" },
     suppressExternalPauseOverlay: false,
+    blockPortrait: false,
   },
 };
 
@@ -109,12 +121,22 @@ export default function GamePlayerClient({ game }: { game: Game }) {
     setIsTouchDevice(coarse || touch);
   }, []);
 
-  // Aviso "GIRA TU DISPOSITIVO": solo para los 4 juegos reales en tactil.
-  // orientationBlocked es independiente del `paused` manual (no togglea el
-  // boton visible PAUSA/REANUDAR): al bloquear pausa el juego real; al
-  // desbloquear, reanuda solo si el jugador no habia pausado manualmente.
+  // Clase en <body> (en vez de CSS :has(), mas confiable entre navegadores)
+  // que habilita el layout compacto de landscape movil en app/globals.css
+  // solo para los 4 juegos reales en dispositivo tactil.
   useEffect(() => {
     if (!isRealGame || !isTouchDevice) return;
+    document.body.classList.add("av-touch-player");
+    return () => document.body.classList.remove("av-touch-player");
+  }, [isRealGame, isTouchDevice]);
+
+  // Aviso "GIRA TU DISPOSITIVO": solo para los juegos reales en tactil que
+  // requieren horizontal (config.blockPortrait). orientationBlocked es
+  // independiente del `paused` manual (no togglea el boton visible
+  // PAUSA/REANUDAR): al bloquear pausa el juego real; al desbloquear,
+  // reanuda solo si el jugador no habia pausado manualmente.
+  useEffect(() => {
+    if (!isRealGame || !isTouchDevice || !config?.blockPortrait) return;
     const mq = window.matchMedia("(orientation: portrait)");
     const applyOrientation = (portrait: boolean) => {
       setOrientationBlocked(portrait);
@@ -129,7 +151,7 @@ export default function GamePlayerClient({ game }: { game: Game }) {
       applyOrientation(e.matches);
     mq.addEventListener("change", handleChange);
     return () => mq.removeEventListener("change", handleChange);
-  }, [isRealGame, isTouchDevice]);
+  }, [isRealGame, isTouchDevice, config?.blockPortrait]);
 
   // Cargar la skin persistida tras montar (evita mismatch de hidratacion:
   // localStorage no existe en SSR). Patron try/catch silencioso de lib/storage.

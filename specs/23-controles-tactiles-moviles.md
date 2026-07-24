@@ -3,7 +3,9 @@
 > **Status:** Approved
 > **Depends on:** SPEC 05 (Asteroides — patrón `keys[code]` continuo), SPEC 06 (Leaderboard y catálogo de juegos reales), SPEC 07 (Tetris — patrón `keydown` discreto), SPEC 08 (Bloque Buster — patrón `GameHandle`/`REAL_GAME_CONFIG` en `GamePlayerClient`), SPEC 09 (Serpentina — generalización del HUD en `GamePlayerClient`)
 > **Date:** 2026-07-24
-> **Objective:** Agregar un overlay de controles táctiles (D-pad + botones de acción, configurado por juego) y un aviso de "girá tu dispositivo" en la pantalla `/games/[id]/jugar`, para que los 4 juegos reales (`asteroides`, `tetris`, `bloque-buster`, `serpentina`) sean jugables por completo en un teléfono táctil sin teclado.
+> **Objective:** Agregar un overlay de controles táctiles (D-pad + botones de acción, configurado por juego) en la pantalla `/games/[id]/jugar`, para que los 4 juegos reales (`asteroides`, `tetris`, `bloque-buster`, `serpentina`) sean jugables por completo en un teléfono táctil sin teclado.
+>
+> **Actualización 2026-07-24 (pruebas en dispositivo real):** la implementación original forzaba horizontal con un aviso "GIRÁ TU DISPOSITIVO" + pausa automática en portrait (ver Decisions). Al probar en un teléfono real, el layout de horizontal resultó impráctico (nav/HUD ocupan casi toda la altura disponible) y se comprobó que el `.crt-screen` (aspect-ratio 4/3 fijo, sin cambios) entra con tamaño cómodamente jugable en portrait. Se pivotó a un mecanismo por juego (`blockPortrait` en `REAL_GAME_CONFIG`, `components/GamePlayerClient.tsx`) que permite exigir horizontal o no; los 4 juegos reales terminaron con `blockPortrait: false` (jugables directo en vertical, sin aviso de rotación). El mecanismo de aviso/pausa por orientación se deja implementado y disponible para un juego futuro que sí lo necesite, pero no lo ejercita ninguno de los 4 juegos actuales.
 
 ## Scope
 
@@ -18,9 +20,11 @@
   - `tetris`: D-pad con 3 botones (`ArrowLeft`, `ArrowRight`, `ArrowDown` soft-drop, los 3 `discrete`) + 2 acciones (ROTAR `ArrowUp`, HARD DROP `Space`, ambas `discrete`).
   - `bloque-buster`: D-pad con 2 botones (`ArrowLeft`, `ArrowRight`) únicamente, sin cluster de acciones.
   - `serpentina`: D-pad de 4 direcciones (`ArrowUp/Down/Left/Right`, todas `discrete`), sin cluster de acciones.
-- Aviso de orientación: en `GamePlayerClient.tsx`, cuando se detecta dispositivo táctil y `window.matchMedia("(orientation: portrait)").matches`, se muestra un overlay "GIRÁ TU DISPOSITIVO" (mismo estilo visual que el overlay existente de "EN PAUSA") y se pausa el juego real automáticamente (`gameRef.current?.pause()`) sin togglear el botón visible PAUSA/REANUDAR. Al volver a horizontal, se reanuda automáticamente (`gameRef.current?.resume()`) solo si el jugador no había pausado manualmente antes de rotar.
-- Integración en `components/GamePlayerClient.tsx`: montar `<TouchControls gameId={game.id} />` únicamente cuando `game.id` sea uno de los 4 juegos reales (`asteroides`, `tetris`, `bloque-buster`, `serpentina`); montar el aviso de orientación en el mismo conjunto de juegos.
-- CSS nuevo en `app/globals.css`: clases para el D-pad y los botones de acción (posición absoluta sobre `.crt-screen`, `touch-action: none` para evitar scroll/zoom accidental al tocar), y el overlay de rotación reutilizando la estética del overlay de pausa existente.
+- Aviso de orientación (mecanismo disponible, no activo hoy): en `GamePlayerClient.tsx`, `RealGameConfig.blockPortrait: boolean` decide por juego si se exige horizontal. Cuando `blockPortrait: true` y se detecta dispositivo táctil en `window.matchMedia("(orientation: portrait)").matches`, se muestra un overlay "GIRÁ TU DISPOSITIVO" (mismo estilo visual que el overlay existente de "EN PAUSA", reutilizando la clase `.crt-content`) y se pausa el juego real automáticamente (`gameRef.current?.pause()`) sin togglear el botón visible PAUSA/REANUDAR; al volver a horizontal, se reanuda automáticamente solo si el jugador no había pausado manualmente antes de rotar. **Tras pruebas en dispositivo real, los 4 juegos reales quedaron con `blockPortrait: false`** (jugables directo en vertical, sin aviso ni pausa por orientación) — ver Decisions.
+- Integración en `components/GamePlayerClient.tsx`: montar `<TouchControls gameId={game.id} />` únicamente cuando `game.id` sea uno de los 4 juegos reales (`asteroides`, `tetris`, `bloque-buster`, `serpentina`); el aviso de orientación se monta para el mismo conjunto de juegos pero solo se activa si `blockPortrait: true` en su config.
+- CSS nuevo en `app/globals.css`: clases para el D-pad y los botones de acción (posición absoluta sobre `.crt-screen`, `touch-action: none` para evitar scroll/zoom accidental al tocar), y el overlay de rotación reutilizando la estética del overlay de pausa existente. Ambos clusters (`.touch-dpad`/`.touch-actions`) usan `max-width` (46% cada uno cuando ambos existen, o `.touch-dpad--wide` al 92% cuando el juego no tiene cluster de acciones) + `flex-wrap` para que nunca se superpongan entre sí en una pantalla angosta, comprobado en dispositivo real en Asteroides (D-pad + 2 acciones) y Serpentina (D-pad de 4 sin acciones, las 4 flechas en una sola línea).
+- Fix de responsividad general de la pantalla `/jugar` en portrait angosto (necesario para que los controles táctiles sean usables, no solo cosméticos): `.hud-actions` (botones SKIN/PAUSA/FIN/SALIR) y `.crt-bottom` ahora tienen `flex-wrap: wrap` — sin esto, en un teléfono real esa fila se salía del ancho de la pantalla y forzaba scroll horizontal en toda la página.
+- Ajuste de velocidad en `components/games/SerpentinaGame.tsx` (`BASE_TICK_MS` 160→190, `MIN_TICK_MS` 60→80), para todos los jugadores (teclado y táctil): en dispositivo real, la velocidad original hacía que la serpiente chocara consigo misma muy rápido al jugar con los botones táctiles (más lentos/imprecisos que el teclado). Es la única excepción a "no tocar la lógica interna de los juegos" en esta spec — decisión explícita del usuario tras probar en dispositivo real (ver Decisions).
 - Documentar en `touchControls.ts` (comentario breve) el patrón para que specs futuras (10-22, aún no implementadas) agreguen su propia entrada de config cuando el juego correspondiente se active.
 
 **Out of scope (para futuras specs):**
@@ -113,8 +117,20 @@ Sin estado externo: internamente resuelve `TOUCH_CONTROLS_CONFIG[gameId]`, y si 
 
 ```ts
 const [isTouchDevice, setIsTouchDevice] = useState(false); // detectado en useEffect tras montar
-const [orientationBlocked, setOrientationBlocked] = useState(false); // true = táctil + portrait
+const [orientationBlocked, setOrientationBlocked] = useState(false); // true = touch + portrait + blockPortrait
 ```
+
+Y un campo nuevo en `RealGameConfig` (junto a `fourthStat`/`suppressExternalPauseOverlay` ya existentes):
+
+```ts
+type RealGameConfig = {
+  fourthStat: FourthStat;
+  suppressExternalPauseOverlay: boolean;
+  blockPortrait: boolean; // true = exige horizontal (aviso + pausa); false = jugable en vertical
+};
+```
+
+Valor real tras las pruebas en dispositivo: `blockPortrait: false` para los 4 juegos reales (`asteroides`, `tetris`, `bloque-buster`, `serpentina`) — ninguno exige horizontal hoy, pero el campo queda disponible por juego para cuando alguno futuro sí lo necesite.
 
 Convenciones:
 
@@ -122,7 +138,8 @@ Convenciones:
 - `discrete: false` → el botón mantiene `keys[code] = true` desde `pointerdown` hasta `pointerup`/`pointercancel`/`pointerleave` (mismo efecto que sostener la tecla física).
 - `discrete: true` → el botón dispara un primer `keydown` inmediato y repite cada `TOUCH_REPEAT_MS` mientras se sostiene, con un solo `keyup` final al soltar.
 - `TOUCH_CONTROLS_CONFIG` sin entrada para un `game.id` (placeholders, juegos futuros no implementados) ⇒ `TouchControls` no renderiza nada para ese juego.
-- `orientationBlocked` es independiente del `paused` manual (botón PAUSA/REANUDAR existente): al activarse llama a `gameRef.current?.pause()` sin togglear el estado visible de pausa; al desactivarse, llama a `gameRef.current?.resume()` solo si `paused` (manual) es `false`.
+- El efecto de orientación solo corre si `config?.blockPortrait` es `true` (ninguno de los 4 juegos reales hoy). Cuando corre, `orientationBlocked` es independiente del `paused` manual (botón PAUSA/REANUDAR existente): al activarse llama a `gameRef.current?.pause()` sin togglear el estado visible de pausa; al desactivarse, llama a `gameRef.current?.resume()` solo si `paused` (manual) es `false`.
+- `.touch-dpad`/`.touch-actions` usan `max-width: 46%` cada uno (o `.touch-dpad--wide` al `92%` cuando `config.actions.length === 0`, aplicada en `TouchControls.tsx`) para que nunca se superpongan entre sí, sin importar el ancho real del dispositivo.
 
 ## Implementation plan
 
@@ -142,19 +159,21 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] En un dispositivo/emulador táctil, `/games/asteroides/jugar` muestra un D-pad (ROTAR IZQ/DER) y botones de acción (PROPULSAR, DISPARAR) sobre el `.crt-screen`.
-- [ ] En un dispositivo/emulador táctil, `/games/tetris/jugar` muestra un D-pad (◄ ► ▼) y botones de acción (ROTAR, CAER).
-- [ ] En un dispositivo/emulador táctil, `/games/bloque-buster/jugar` muestra un D-pad (◄ ►) sin cluster de acciones.
-- [ ] En un dispositivo/emulador táctil, `/games/serpentina/jugar` muestra un D-pad de 4 direcciones sin cluster de acciones.
-- [ ] En desktop con mouse (sin touch), ninguno de los 4 juegos reales muestra botones táctiles.
-- [ ] Sostener un botón `discrete: false` (p. ej. PROPULSAR en Asteroides) mantiene la acción activa mientras se sostiene, igual que sostener la tecla física.
-- [ ] Sostener un botón `discrete: true` (p. ej. ◄ en Tetris) repite el movimiento cada `TOUCH_REPEAT_MS` mientras se sostiene, sin necesidad de tocar repetidamente.
-- [ ] Soltar cualquier botón táctil (`pointerup`, `pointercancel` o `pointerleave`) detiene la acción correspondiente sin dejarla "trabada".
-- [ ] El teclado físico sigue controlando los 4 juegos reales exactamente igual que antes de esta spec.
-- [ ] En un dispositivo/emulador táctil en orientación vertical, aparece el aviso "GIRÁ TU DISPOSITIVO" y el juego se pausa (sin togglear visualmente el botón PAUSA/REANUDAR).
-- [ ] Al rotar a horizontal, el aviso desaparece y el juego se reanuda automáticamente, salvo que el jugador ya hubiera pausado manualmente antes de rotar (en ese caso permanece en pausa).
-- [ ] Los 4 placeholders (`gloton`, `invasores`, `ranaria`, `duelo-pixel`) no muestran botones táctiles ni el aviso de rotación.
-- [ ] `npm run build` y `npm run lint` completan sin errores nuevos en los archivos agregados/modificados.
+- [x] En un dispositivo/emulador táctil, `/games/asteroides/jugar` muestra un D-pad (ROTAR IZQ/DER) y botones de acción (PROPULSAR, DISPARAR) sobre el `.crt-screen`. Verificado en teléfono real.
+- [x] En un dispositivo/emulador táctil, `/games/tetris/jugar` muestra un D-pad (◄ ► ▼) y botones de acción (ROTAR, CAER). Verificado en teléfono real.
+- [x] En un dispositivo/emulador táctil, `/games/bloque-buster/jugar` muestra un D-pad (◄ ►) sin cluster de acciones. Verificado en teléfono real.
+- [x] En un dispositivo/emulador táctil, `/games/serpentina/jugar` muestra un D-pad de 4 direcciones sin cluster de acciones. Verificado en teléfono real.
+- [ ] En desktop con mouse (sin touch), ninguno de los 4 juegos reales muestra botones táctiles. _(Pendiente de verificación manual en desktop; el resto de la spec se verificó en teléfono real.)_
+- [x] Sostener un botón `discrete: false` (p. ej. PROPULSAR en Asteroides) mantiene la acción activa mientras se sostiene, igual que sostener la tecla física. Verificado en teléfono real.
+- [x] Sostener un botón `discrete: true` (p. ej. ◄ en Tetris/Serpentina) repite el movimiento cada `TOUCH_REPEAT_MS` mientras se sostiene, sin necesidad de tocar repetidamente. Verificado en teléfono real.
+- [x] Soltar cualquier botón táctil (`pointerup`, `pointercancel` o `pointerleave`) detiene la acción correspondiente sin dejarla "trabada". Verificado en teléfono real.
+- [x] El teclado físico sigue controlando los 4 juegos reales exactamente igual que antes de esta spec.
+- [x] Con `blockPortrait: false` (los 4 juegos reales hoy), **no** aparece ningún aviso de rotación en portrait — el juego se juega directo en vertical, sin pausa automática. Verificado en dispositivo real para los 4 juegos.
+- [ ] _(Mecanismo disponible, sin caso de uso real hoy)_ Si un juego futuro tuviera `blockPortrait: true`, en portrait aparecería el aviso "GIRÁ TU DISPOSITIVO" y se pausaría el juego (sin togglear visualmente PAUSA/REANUDAR); al rotar a horizontal se reanudaría solo si no había pausa manual previa.
+- [x] En una pantalla de teléfono angosta, el D-pad y el cluster de acciones nunca se superponen entre sí (verificado en Asteroides: ◄►+PROPULSAR/DISPARAR sin solaparse; y en Serpentina: las 4 flechas en una sola línea con `.touch-dpad--wide`).
+- [x] En portrait angosto, `.hud-actions` y `.crt-bottom` no generan overflow/scroll horizontal de la página.
+- [x] Los 4 placeholders (`gloton`, `invasores`, `ranaria`, `duelo-pixel`) no muestran botones táctiles ni el aviso de rotación.
+- [x] `npm run build` completa sin errores nuevos en los archivos agregados/modificados (`npm run lint` standalone reporta 1 error preexistente más del mismo tipo que ya existía en el código de skins — `react-hooks/set-state-in-effect` —, decisión explícita de no refactorizar para mantener el mismo patrón; no afecta `npm run build`).
 
 ## Decisions
 
@@ -163,10 +182,23 @@ Convenciones:
 - **Yes:** mostrar los controles táctiles solo si se detecta `pointer: coarse`/`ontouchstart`. **No:** mostrarlos siempre (incluso en desktop) — evita ruido visual en mouse/teclado y mantiene el `.crt-screen` limpio para la mayoría de los jugadores actuales.
 - **Yes:** auto-repeat configurable por botón (`discrete: true/false`) en vez de un único comportamiento global. **No:** forzar auto-repeat en todos los botones — Asteroides/Bloque Buster ya leen `keys[code]` de forma continua (sostener alcanza) y agregarles repetición sería redundante; Tetris/Serpentina reaccionan a `keydown` puntual y sí lo necesitan.
 - **Yes:** D-pad abajo-izquierda + acciones abajo-derecha, superpuestos al `.crt-screen`. **No:** una barra de botones debajo del canvas — ocuparía espacio vertical que ya es escaso en móvil junto al aviso de rotación, y el overlay reproduce el esquema estándar de control de juego móvil.
-- **Yes:** pedir girar a horizontal con aviso + pausa automática cuando el dispositivo táctil está en vertical. **No:** adaptar el layout para funcionar también en vertical — el `.crt-screen` es `aspect-ratio: 4/3` fijo (decisión ya tomada en specs anteriores, no se toca aquí); en vertical el canvas y los controles quedarían demasiado chicos para jugar cómodo.
-- **Yes:** el `orientationBlocked` es independiente del `paused` manual (no togglea el botón visible PAUSA/REANUDAR). **No:** reusar el mismo estado `paused` — mezclarlos causaría que, al salir de vertical, el juego se reanudara aunque el jugador hubiera pausado manualmente a propósito.
+- **Decisión original:** pedir girar a horizontal con aviso + pausa automática cuando el dispositivo táctil está en vertical, sin adaptar el layout para vertical (se asumía que el `.crt-screen`, `aspect-ratio: 4/3` fijo, quedaría "demasiado chico" en portrait).
+  **Actualización 2026-07-24 (pruebas en dispositivo real):** esa suposición resultó incorrecta. En un teléfono real, el `.crt-screen` entra con tamaño cómodamente jugable en portrait, y el layout de horizontal resultó impráctico (nav + HUD + `crt-bottom` ocupan casi toda la altura disponible en un teléfono apaisado real; el primer intento de compactarlos con una media query nunca llegó a confirmarse funcionando). **Yes (nueva decisión):** exponer `blockPortrait: boolean` por juego en `RealGameConfig` y dejar los 4 juegos reales con `blockPortrait: false` — jugables directo en vertical, sin aviso ni pausa por orientación. **No:** invertir más tiempo en depurar el layout de horizontal para estos 4 juegos ahora — el mecanismo de aviso/pausa (código de `orientationBlocked` + CSS de landscape compacto) se deja implementado y disponible por si un juego futuro sí necesita forzar horizontal, pero no se sigue debuggeando para los 4 actuales.
+- **Yes:** el `orientationBlocked` es independiente del `paused` manual (no togglea el botón visible PAUSA/REANUDAR). **No:** reusar el mismo estado `paused` — mezclarlos causaría que, al salir de vertical, el juego se reanudara aunque el jugador hubiera pausado manualmente a propósito. _(Aplica solo si algún juego futuro usa `blockPortrait: true`.)_
 - **Yes:** sin persistencia de la preferencia de controles táctiles (siempre auto-detectado). **No:** guardar en `localStorage` si el usuario prefiere ocultarlos — no se pidió esa funcionalidad y agrega superficie sin necesidad clara.
 - **Yes:** `lib/games/touchControls.ts` como registro compartido, análogo a `lib/games/skins.ts`. **No:** hardcodear la config de botones dentro de `TouchControls.tsx` o de `GamePlayerClient.tsx` — el registro separado sigue la convención ya establecida en el proyecto y facilita que specs futuras agreguen su entrada sin tocar el componente.
+- **Yes:** los clusters `.touch-dpad`/`.touch-actions` usan `max-width` (46% cada uno, o `.touch-dpad--wide` al 92% sin cluster de acciones) en vez de tamaño intrínseco libre. **No:** dejar que el ancho de cada cluster dependiera solo del contenido — en un teléfono real angosto, "PROPULSAR"/"DISPARAR" (Asteroides) hacían que el D-pad y las acciones se superpusieran visualmente.
+- **Yes:** bajar la velocidad de Serpentina (`BASE_TICK_MS`/`MIN_TICK_MS`) para todos los jugadores, tocando la lógica interna de `SerpentinaGame.tsx`. **No:** una velocidad distinta solo para táctil — el usuario, al elegir entre las dos opciones, prefirió el cambio global aunque afecte también a los jugadores de teclado; es la única excepción a "no tocar la lógica interna de los juegos" en esta spec, decidida explícitamente durante las pruebas en dispositivo real.
+
+## Amendments (post-implementation, pruebas en dispositivo real, 2026-07-24)
+
+Tras completar el plan original (pasos 1-7) y probar en un teléfono real (no solo emulador), surgieron ajustes que esta spec no había previsto:
+
+1. **`blockPortrait` por juego** (`RealGameConfig` en `GamePlayerClient.tsx`): el aviso "GIRÁ TU DISPOSITIVO" resultó innecesario — el `.crt-screen` ya entra jugable en portrait en un teléfono real. Los 4 juegos reales quedaron con `blockPortrait: false`. Ver Decisions.
+2. **Intento de layout compacto para landscape** (ocultar nav/footer vía clase `av-touch-player` en `<body>`, compactar `.player-hud`/`.crt`/`.crt-screen` bajo `@media (orientation: landscape) and (max-height: 600px) and (pointer: coarse)`): quedó implementado en `app/globals.css` pero **nunca se confirmó que funcionara** en dispositivo real antes de pivotar a portrait. No lo ejercita ningún juego real hoy (los 4 tienen `blockPortrait: false`); queda como base para retomar si algún juego futuro fuerza horizontal.
+3. **Fix de superposición de botones táctiles**: `.touch-dpad`/`.touch-actions` pasaron de ancho intrínseco a `max-width: 46%` (o `.touch-dpad--wide` al `92%` sin cluster de acciones) + `flex-wrap`, y `.touch-btn` se achicó (`font-size` 10→8px, `min-width`/`min-height` 52→46px). Sin esto, en un teléfono angosto el D-pad y las acciones de Asteroides se superponían.
+4. **Fix de overflow horizontal en portrait**: `.hud-actions` y `.crt-bottom` no tenían `flex-wrap`, y en un teléfono real esa fila se salía del ancho de la pantalla forzando scroll horizontal en toda la página. Se agregó `flex-wrap: wrap` a ambos.
+5. **Velocidad de Serpentina**: `BASE_TICK_MS` 160→190 y `MIN_TICK_MS` 60→80 en `SerpentinaGame.tsx`, para todos los jugadores — la velocidad original hacía que la serpiente chocara consigo misma muy rápido jugando con botones táctiles.
 
 ## Risks
 

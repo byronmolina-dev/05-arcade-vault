@@ -82,9 +82,15 @@ export default function TouchControls({ gameId }: TouchControlsProps) {
     </button>
   );
 
+  // Sin cluster de acciones (bloque-buster, serpentina): el D-pad puede
+  // usar mucho mas ancho sin riesgo de superponerse con nada a la derecha,
+  // asi que los 4 botones de direccion entran en una sola linea.
+  const dpadClassName =
+    config.actions.length === 0 ? "touch-dpad touch-dpad--wide" : "touch-dpad";
+
   return (
     <div className="touch-controls">
-      <div className="touch-dpad">{config.dpad.map(renderButton)}</div>
+      <div className={dpadClassName}>{config.dpad.map(renderButton)}</div>
       {config.actions.length > 0 && (
         <div className="touch-actions">{config.actions.map(renderButton)}</div>
       )}
