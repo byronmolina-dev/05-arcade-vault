@@ -92,6 +92,44 @@ export default function GamePlayerClient({ game }: { game: Game }) {
   const hasSkins = SKINNED_GAME_IDS.includes(game.id);
   const [skin, setSkin] = useState<SkinId>("clasico");
 
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [orientationBlocked, setOrientationBlocked] = useState(false);
+  const pausedRef = useRef(paused);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
+
+  // Deteccion tras montar (evita mismatch de hidratacion). Mismo patron
+  // que TouchControls y que la carga de skin persistida mas abajo.
+  useEffect(() => {
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const touch = "ontouchstart" in window;
+    setIsTouchDevice(coarse || touch);
+  }, []);
+
+  // Aviso "GIRA TU DISPOSITIVO": solo para los 4 juegos reales en tactil.
+  // orientationBlocked es independiente del `paused` manual (no togglea el
+  // boton visible PAUSA/REANUDAR): al bloquear pausa el juego real; al
+  // desbloquear, reanuda solo si el jugador no habia pausado manualmente.
+  useEffect(() => {
+    if (!isRealGame || !isTouchDevice) return;
+    const mq = window.matchMedia("(orientation: portrait)");
+    const applyOrientation = (portrait: boolean) => {
+      setOrientationBlocked(portrait);
+      if (portrait) {
+        gameRef.current?.pause();
+      } else if (!pausedRef.current) {
+        gameRef.current?.resume();
+      }
+    };
+    applyOrientation(mq.matches);
+    const handleChange = (e: MediaQueryListEvent) =>
+      applyOrientation(e.matches);
+    mq.addEventListener("change", handleChange);
+    return () => mq.removeEventListener("change", handleChange);
+  }, [isRealGame, isTouchDevice]);
+
   // Cargar la skin persistida tras montar (evita mismatch de hidratacion:
   // localStorage no existe en SSR). Patron try/catch silencioso de lib/storage.
   useEffect(() => {
@@ -309,6 +347,29 @@ export default function GamePlayerClient({ game }: { game: Game }) {
                   }}
                 >
                   PULSA REANUDAR PARA CONTINUAR
+                </div>
+              </div>
+            </div>
+          )}
+          {isRealGame && orientationBlocked && (
+            <div
+              className="crt-content"
+              style={{ background: "rgba(0,0,0,0.85)", zIndex: 8 }}
+            >
+              <div>
+                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
+                  GIRÁ TU DISPOSITIVO
+                </div>
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: 11,
+                    color: "var(--ink-dim)",
+                    marginTop: 10,
+                    letterSpacing: "0.16em",
+                  }}
+                >
+                  JUGÁ EN HORIZONTAL PARA CONTINUAR
                 </div>
               </div>
             </div>

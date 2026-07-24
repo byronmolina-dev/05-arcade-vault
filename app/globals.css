@@ -1172,16 +1172,6 @@ a {
 .touch-btn:active {
   background: rgba(0, 245, 255, 0.25);
 }
-.touch-orientation {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.85);
-  text-align: center;
-}
 
 /* fake in-screen game */
 .game-arena {
