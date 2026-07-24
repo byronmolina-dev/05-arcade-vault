@@ -15,6 +15,7 @@ import AsteroidsGame from "@/components/games/AsteroidsGame";
 import TetrisGame from "@/components/games/TetrisGame";
 import BloqueBusterGame from "@/components/games/BloqueBusterGame";
 import SerpentinaGame from "@/components/games/SerpentinaGame";
+import TouchControls from "@/components/games/TouchControls";
 
 const LIVES = 3;
 
@@ -374,6 +375,7 @@ export default function GamePlayerClient({ game }: { game: Game }) {
               </div>
             </div>
           )}
+          {isRealGame && <TouchControls gameId={game.id} />}
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
